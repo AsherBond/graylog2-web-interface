@@ -1,0 +1,15 @@
+@(currentUser: User, streams: api.results.StreamsResult)
+
+@main("Streams", null, "", currentUser) {
+
+    <a href="/streams/new" class="btn btn-primary btn-small pull-right">Create stream</a>
+
+    <h1>Streams</h1>
+    @streams.getTotal total
+
+    <br /><br />
+    @for(stream <- streams.getStreams) {
+       @stream<br />
+    }
+
+}

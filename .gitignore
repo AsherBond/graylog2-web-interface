@@ -1,12 +1,13 @@
-log/*
-tmp/*
-
-nbproject/*
-
-# Idea project files
+logs
+project/project
+project/target
+target
+tmp
+.history
+dist
 /.idea
-/*.ipr
 /*.iml
+<<<<<<< HEAD
 /*.iws
 /.generators
 /.rakeTasks
@@ -21,20 +22,16 @@ config/initializers/secret_token.rb
 
 Capfile
 config/deploy.rb
+=======
+/out
+/.idea_modules
+/.classpath
+/.project
+/RUNNING_PID
+/.settings
+.ecltarget
+>>>>>>> ad69f75ad330a2b40ef31394d435e3bf121179b9
 
-build/builds/*
-build/logs/*
 
-public/images/dashboard_logo.png
-public/images/graphs/*
-
-.bundle/
-vendor/bundle/
-
-coverage/
-test/reports/
-
+.target
 .DS_Store
-
-*.swp
-*.swo

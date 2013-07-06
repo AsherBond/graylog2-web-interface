@@ -1,0 +1,57 @@
+@(title: String, sidebarContent: Html, searchQuery: String = "", currentUser: User)(content: Html)
+@import views.helpers.TimerangeSelector
+
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Graylog2 - @title</title>
+      	@partials.head()
+    </head>
+    <body>
+    
+   		@partials.top()
+
+		<div class="container-fluid">
+			<div class="row-fluid no-bm">
+	    		<div class="span12" id="universalsearch">
+					<form class="searchform" action="@controllers.routes.SearchController.index()" method="GET">
+						<!--  sorry, i used a table lol -->
+						<table id="universalsearch-container">
+						<tr>
+							<td id="universalsearch-timerange">
+								<select name="timerange">
+									@Html(TimerangeSelector.getOptions(request))
+								</select>
+							</td>
+							
+							<td>
+							<input type="text" class="input-medium" name="q"
+								value="@searchQuery"
+								placeholder='Type your search query here and press enter. ("not found AND http) OR http_response_code:[400 TO *]' />
+						    </td>
+						</tr>
+						</table>
+					</form>
+				</div>
+	    	</div>
+	    	
+	    	<div class="row-fluid">
+		   		<div class="span8" id="main-content">
+		       		@content
+		       	</div>
+	       	
+		   		<div class="span4" id="sidebar">
+		   			<div id="sidebar-inner" data-spy="affix" data-offset-top="50">
+		   				<div id="sidebar-original">
+							@sidebarContent
+						</div>
+						
+						<div id="sidebar-replacement"></div>
+					</div>
+		       	</div>
+			</div>
+	   </div>
+   
+    </body>
+</html>
