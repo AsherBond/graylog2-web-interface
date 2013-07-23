@@ -17,24 +17,22 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.responses;
+package models;
 
-import com.google.gson.annotations.SerializedName;
+import lib.APIException;
+import lib.Api;
+import models.api.responses.InputTypesResponse;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class NodeSummaryResponse {
+public class Input {
 
-    @SerializedName("node_id")
-    public String nodeId;
-
-    public String hostname;
-
-    @SerializedName("last_seen")
-    public String lastSeen;
-
-    @SerializedName("transport_address")
-    public String transportAddress;
+    public static Map<String, String> getTypes(Node node) throws IOException, APIException {
+        return Api.get(node, "system/inputs/types", InputTypesResponse.class).types;
+    }
 
 }

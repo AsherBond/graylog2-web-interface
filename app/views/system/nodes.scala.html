@@ -1,6 +1,8 @@
-@(currentUser: User, jvms: List[ServerJVMStats], buffers: Map[String, BufferInfo])
+@(currentUser: User, breadcrumbs: lib.BreadcrumbList, jvms: List[ServerJVMStats], buffers: Map[String, BufferInfo])
 
 @main("Nodes", views.html.system.sidebar(), "", currentUser) {
+
+    @views.html.partials.breadcrumbs(breadcrumbs)
 
     <div class="row-fluid">
         <h1><i class="icon icon-sitemap"></i> Nodes</h1>
@@ -22,7 +24,7 @@
 
     <h2><i class="icon icon-cloud"></i> Graylog2 nodes</h2>
     @for(jvm <- jvms) {
-        <div class="row-fluid message-processing-host">
+        <div class="row-fluid message-processing-host node-row">
             <span class="pull-right node-throughput-info">
                 @if(jvm.isProcessing) {
                     <span class="sentence">
@@ -30,23 +32,37 @@
                         <strong class="node-throughput" data-node-id="@jvm.getNodeId">9</strong>
                         messages per second.
                     </span>
-
-                    <a href="#" class="btn btn-danger btn-mini change-message-processing"
-                            data-action="pause"
-                            data-node-id="@jvm.getNodeId">
-                        Pause
-                    </a>
                 } else {
                     <span class="sentence">
                         Processing is <strong>paused</strong>.
                     </span>
-
-                    <a href="#" class="btn btn-success btn-mini change-message-processing"
-                            data-action="resume"
-                            data-node-id="@jvm.getNodeId">
-                        Resume
-                    </a>
                 }
+
+                <div class="btn-group">
+                    <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" href="#">
+                        Action
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/system/threaddump/@jvm.getNodeId">Get thread dump</a></li>
+                        <li><a href="/system/inputs/@jvm.getNodeId">Manage inputs</a></li>
+
+                        <li class="divider"></li>
+                        <li>
+                        @if(jvm.isProcessing) {
+                            <a class="change-message-processing"
+                            data-action="pause"
+                            data-node-id="@jvm.getNodeId"
+                            href="#">Pause message processing</a>
+                        } else {
+                            <a class="change-message-processing"
+                            data-action="resume"
+                            data-node-id="@jvm.getNodeId"
+                            href="#">Resume message processing</a>
+                        }
+                        </li>
+                    </ul>
+                </div>
             </span>
 
             <h3>

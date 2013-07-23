@@ -17,24 +17,17 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.responses;
+package views.helpers;
 
-import com.google.gson.annotations.SerializedName;
+import org.joda.time.DateTime;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class NodeSummaryResponse {
+public class DateHelper {
 
-    @SerializedName("node_id")
-    public String nodeId;
-
-    public String hostname;
-
-    @SerializedName("last_seen")
-    public String lastSeen;
-
-    @SerializedName("transport_address")
-    public String transportAddress;
+    public static String current() {
+        return DateTime.now().toString();
+    }
 
 }

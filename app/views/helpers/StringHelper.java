@@ -17,24 +17,19 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.responses;
-
-import com.google.gson.annotations.SerializedName;
+package views.helpers;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class NodeSummaryResponse {
+public class StringHelper {
 
-    @SerializedName("node_id")
-    public String nodeId;
+    public static String simpleFormat(String x) {
+        if (x == null) {
+            return "";
+        }
 
-    public String hostname;
-
-    @SerializedName("last_seen")
-    public String lastSeen;
-
-    @SerializedName("transport_address")
-    public String transportAddress;
+        return x.replaceAll("(\r\n|\n)", "<br />");
+    }
 
 }

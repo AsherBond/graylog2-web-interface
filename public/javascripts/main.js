@@ -286,6 +286,13 @@ $(document).ready(function() {
     // Pausing/Resuming of message processing.
     $(".change-message-processing").on("click", function() {
         var action = $(this).attr("data-action");
+
+        if  (action == "pause") {
+            if (!confirm("Really pause message processing?")) {
+                return;
+            }
+        }
+
         $.ajax({
             url: "/a/system/processing/" + action,
             type: "PUT",
@@ -303,6 +310,11 @@ $(document).ready(function() {
     // Submit button confirmation.
     $('button[data-confirm]').on("click", function() {
         return confirm($(this).attr("data-confirm"));
+    });
+
+    // Paginator disabled links should not trigger anything.
+    $(".pagination .disabled a").on("click", function() {
+       return false;
     });
 
 	function displayFailureInSidebar(message) {

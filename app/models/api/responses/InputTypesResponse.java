@@ -19,22 +19,13 @@
  */
 package models.api.responses;
 
-import com.google.gson.annotations.SerializedName;
+import java.util.Map;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class NodeSummaryResponse {
+public class InputTypesResponse {
 
-    @SerializedName("node_id")
-    public String nodeId;
-
-    public String hostname;
-
-    @SerializedName("last_seen")
-    public String lastSeen;
-
-    @SerializedName("transport_address")
-    public String transportAddress;
+    public Map<String, String> types;
 
 }
