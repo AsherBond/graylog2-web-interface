@@ -396,3 +396,105 @@ form #stream-rules {
     position: relative;
     top: 3px;
 }
+
+.modal form {
+    margin-bottom: 0;
+}s
+
+.input-list h2 {
+    margin-bottom: 5px;
+}
+
+.input-row {
+    margin-bottom: 8px;
+    margin-top: 0px;
+}
+
+.input-row .well {
+    margin-bottom: 0px;
+    margin-top: 3px;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.input-row-info {
+    position: relative;
+    top: 2px;
+}
+
+.input-row-info form {
+    display: inline;
+}
+
+.input-row-info .text {
+    position: relative;
+    top: 3px;
+}
+
+.input-list .alert {
+    margin-top: 10px;
+}
+
+#configure-input {
+    position: relative;
+    top: -5px;
+}
+
+.input-new {
+    margin-bottom: 8px;
+}
+
+.error-bar {
+    margin-bottom: 0px;
+}
+
+.main-error {
+    margin-bottom: 10px;
+}
+
+.node-row .node-link {
+    color: #000;
+}
+
+.system-messages a {
+    color: #000;
+}
+
+.xtrc-select-message {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.xtrc-message-fields {
+    margin: 0;
+}
+
+.xtrc-message-fields dt {
+    float: left;
+    padding-right: 5px;
+}
+
+.xtrc-message-fields dd {
+    margin-left: 10px;
+}
+
+.xtrc-message .well {
+    margin-bottom: 5px;
+}
+
+.xtrc-message dt:hover {
+    color: #0085A7;
+    cursor: pointer;
+}
+
+.xtrc-wizard-field {
+    font-style: italic;
+}
+
+.xtrc-new-example {
+    margin-top: 10px;
+}
+
+.xtrc-hl {
+    background-color: #ff0;
+}

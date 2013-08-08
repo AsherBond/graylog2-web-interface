@@ -17,17 +17,22 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
-
-import com.google.gson.Gson;
+package models.api.responses;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
+public class RegexTestResponse {
 
-    public String toJson() {
-        return new Gson().toJson(this);
+    public String regex;
+    public boolean finds;
+    public String string;
+    public Match match;
+
+    public class Match {
+        public int start;
+        public int end;
+        public String match;
     }
 
 }

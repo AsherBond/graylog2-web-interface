@@ -17,17 +17,16 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
+package models.api.responses.system;
 
-import com.google.gson.Gson;
+import java.util.List;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
+public class InputsResponse {
 
-    public String toJson() {
-        return new Gson().toJson(this);
-    }
+    public int total;
+    public List<InputSummaryResponse> inputs;
 
 }

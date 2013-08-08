@@ -17,17 +17,35 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
+package controllers;
 
+import lib.APIException;
 import com.google.gson.Gson;
+import models.Core;
+import models.RegexTest;
+import play.mvc.Result;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
+public class ToolsApiController extends AuthenticatedController {
 
-    public String toJson() {
-        return new Gson().toJson(this);
+    public static Result regexTest(String regex, String string) {
+        try {
+;           if (regex.isEmpty() || string.isEmpty()) {
+                return badRequest();
+            }
+
+            return ok(new Gson().toJson(RegexTest.test(regex, string))).as("application/json");
+        } catch (IOException e) {
+            return internalServerError("io exception");
+        } catch (APIException e) {
+            return internalServerError("api exception " + e);
+        }
     }
 
 }

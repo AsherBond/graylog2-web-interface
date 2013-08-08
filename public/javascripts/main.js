@@ -307,6 +307,17 @@ $(document).ready(function() {
         return false;
     });
 
+    // Open input configuration modal.
+    $("#configure-input").on("click", function() {
+        var inputType = $("#input-type").val();
+        $('[data-inputtype="' + inputType + '"]').modal();
+    });
+
+    // Check input configuration according to provided plugin attribues.
+    $(".launch-input").on("click", function() {
+        return validate('[data-inputtype="' + $(this).attr("data-type") + '"] form');
+    });
+
     // Submit button confirmation.
     $('button[data-confirm]').on("click", function() {
         return confirm($(this).attr("data-confirm"));
@@ -346,17 +357,33 @@ $(document).ready(function() {
 
 	    return kvp.join('&'); 
 	}
-
-    function showError(message) {
-        toastr.error(message, "Error", {
-            "debug": false,
-            "positionClass": "toast-bottom-full-width",
-            "onclick": null,
-            "fadeIn": 300,
-            "fadeOut": 1000,
-            "timeOut": 7000,
-            "extendedTimeOut": 1000
-        });
-    }
 	
 });
+
+function showError(message) {
+    toastr.error(message, "Error", {
+        "debug": false,
+        "positionClass": "toast-bottom-full-width",
+        "onclick": null,
+        "fadeIn": 300,
+        "fadeOut": 1000,
+        "timeOut": 7000,
+        "extendedTimeOut": 1000
+    });
+}
+
+function showWarning(message) {
+    toastr.warning(message, "Attention", {
+        "debug": false,
+        "positionClass": "toast-bottom-full-width",
+        "onclick": null,
+        "fadeIn": 300,
+        "fadeOut": 1000,
+        "timeOut": 7000,
+        "extendedTimeOut": 1000
+    });
+}
+
+String.prototype.splice = function( idx, rem, s ) {
+    return (this.slice(0,idx) + s + this.slice(idx + Math.abs(rem)));
+};

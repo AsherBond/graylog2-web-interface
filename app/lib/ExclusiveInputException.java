@@ -17,17 +17,10 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
-
-import com.google.gson.Gson;
+package lib;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
-
-    public String toJson() {
-        return new Gson().toJson(this);
-    }
-
+public class ExclusiveInputException extends Throwable {
 }

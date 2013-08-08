@@ -1,0 +1,21 @@
+@(field: lib.plugin.configuration.RequestedConfigurationField)
+
+<label>@field.getHumanName</label>
+<span class="help-block">@field.getDescription</span>
+<input name="configuration_@field.getTitle"
+
+    @if(!field.isOptional) {
+        required
+    }
+
+    @if(field.hasAttribute("is_password")) {
+        type="password"
+    } else {
+        type="text"
+    }
+
+    @if(field.getDefaultValue() != null && !field.getDefaultValue().toString().isEmpty()) {
+        placeholder="@field.getDefaultValue()"
+    }
+
+    class="input-xlarge">

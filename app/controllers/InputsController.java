@@ -20,17 +20,19 @@
 package controllers;
 
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import lib.APIException;
 import lib.Api;
 import lib.BreadcrumbList;
-import models.BufferInfo;
+import lib.ExclusiveInputException;
 import models.Input;
 import models.Node;
-import models.ServerJVMStats;
+import models.api.responses.system.InputTypeSummaryResponse;
+import models.api.results.MessageResult;
+import play.Logger;
 import play.mvc.Result;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,22 +40,10 @@ import java.util.Map;
  */
 public class InputsController extends AuthenticatedController {
 
-    public static Result index() {
-        BreadcrumbList bc = new BreadcrumbList();
-        bc.addCrumb("System", routes.SystemController.index(0));
-        bc.addCrumb("Inputs", routes.InputsController.index());
-
-        try {
-            return ok(views.html.system.inputs.index.render(currentUser(), bc, Node.all()));
-        } catch (IOException e) {
-            return status(504, views.html.errors.error.render(Api.ERROR_MSG_IO, e, request()));
-        } catch (APIException e) {
-            String message = "Could not fetch nodes. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
-            return status(504, views.html.errors.error.render(message, e, request()));
-        }
-    }
-
     public static Result manage(String nodeId) {
+        // TODO: account field attributes using JS (greater than, listen_address, ...)
+        // TODO: persist inputs
+
         Node node = Node.fromId(nodeId);
 
         if (node == null) {
@@ -63,16 +53,114 @@ public class InputsController extends AuthenticatedController {
 
         BreadcrumbList bc = new BreadcrumbList();
         bc.addCrumb("System", routes.SystemController.index(0));
-        bc.addCrumb("Inputs", routes.InputsController.index());
-        bc.addCrumb(node.getNodeId(), routes.InputsController.manage(node.getNodeId()));
+        bc.addCrumb("Nodes", routes.SystemController.nodes());
+        bc.addCrumb(node.getShortNodeId(), routes.SystemController.node(node.getNodeId()));
+        bc.addCrumb("Inputs", routes.InputsController.manage(node.getNodeId()));
 
         try {
-            return ok(views.html.system.inputs.manage.render(currentUser(), bc, node, Input.getTypes(node)));
+            return ok(views.html.system.inputs.manage.render(
+                    currentUser(),
+                    bc,
+                    node,
+                    Input.getAllTypeInformation(node)
+            ));
         } catch (IOException e) {
-            return status(504, views.html.errors.error.render(Api.ERROR_MSG_IO, e, request()));
+            return status(500, views.html.errors.error.render(Api.ERROR_MSG_IO, e, request()));
         } catch (APIException e) {
             String message = "Could not fetch system information. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
-            return status(504, views.html.errors.error.render(message, e, request()));
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+    }
+
+    public static Result launch(String nodeId) {
+        Map<String, Object> configuration = Maps.newHashMap();
+        Map<String, String[]> form = request().body().asFormUrlEncoded();
+
+        String inputType = form.get("type")[0];
+        String inputTitle = form.get("title")[0];
+
+        try {
+            InputTypeSummaryResponse inputInfo = Input.getTypeInformation(Node.fromId(nodeId), inputType);
+
+            for (Map.Entry<String, String[]> f : form.entrySet()) {
+                if (!f.getKey().startsWith("configuration_")) {
+                    continue;
+                }
+
+                String key = f.getKey().substring("configuration_".length());
+                Object value;
+
+                if (f.getValue().length > 0) {
+                    String stringValue = f.getValue()[0];
+
+                    // Decide what to cast to. (string, bool, number)
+                    switch((String) inputInfo.requestedConfiguration.get(key).get("type")) {
+                        case "text":
+                            value = stringValue;
+                            break;
+                        case "number":
+                            value = Integer.parseInt(stringValue);
+                            break;
+                        case "boolean":
+                            value = stringValue.equals("true");
+                            break;
+                        default: continue;
+                    }
+
+                } else {
+                    continue;
+                }
+
+                configuration.put(key, value);
+            }
+
+            try {
+                Input.launch(Node.fromId(nodeId), inputTitle, inputType, configuration, currentUser().getId(), inputInfo.isExclusive);
+            } catch (ExclusiveInputException e) {
+                flash("error", "This input is exclusive and already running.");
+                return redirect(routes.InputsController.manage(nodeId));
+            }
+
+            return redirect(routes.InputsController.manage(nodeId));
+        } catch (IOException e) {
+            return status(500, views.html.errors.error.render(Api.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not launch input. We expected HTTP 202, but got a HTTP " + e.getHttpCode() + ".";
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+    }
+
+    public static Result terminate(String nodeId, String inputId) {
+        try {
+            Input.terminate(Node.fromId(nodeId), inputId);
+
+            return redirect(routes.InputsController.manage(nodeId));
+        } catch (IOException e) {
+            return status(500, views.html.errors.error.render(Api.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not send terminate request. We expected HTTP 202, but got a HTTP " + e.getHttpCode() + ".";
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+    }
+
+    public static Result recentMessage(String nodeId, String inputId) {
+        try {
+            Node node = Node.fromId(nodeId);
+            MessageResult recentlyReceivedMessage = node.getInput(inputId).getRecentlyReceivedMessage(nodeId);
+
+            if (recentlyReceivedMessage == null) {
+                return notFound();
+            }
+
+            Map<String, Object> result = Maps.newHashMap();
+            result.put("id", recentlyReceivedMessage.getId());
+            result.put("fields", recentlyReceivedMessage.getFields());
+
+            return ok(new Gson().toJson(result)).as("application/json");
+        } catch (IOException e) {
+            return status(500);
+        } catch (APIException e) {
+            return status(e.getHttpCode());
         }
     }
 

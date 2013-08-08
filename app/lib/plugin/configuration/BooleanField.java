@@ -17,17 +17,29 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
+package lib.plugin.configuration;
 
-import com.google.gson.Gson;
+import java.util.Map;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
+public class BooleanField extends RequestedConfigurationField {
 
-    public String toJson() {
-        return new Gson().toJson(this);
+    private final static String TYPE = "boolean";
+
+    public BooleanField(Map.Entry<String, Map<String, Object>> c) {
+        super(TYPE, c);
+    }
+
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public String attributeToJSValidation(String attribute) {
+        throw new RuntimeException("This type does not have any validatable attributes.");
     }
 
 }

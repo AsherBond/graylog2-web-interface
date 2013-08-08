@@ -17,17 +17,30 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests;
+package models;
 
-import com.google.gson.Gson;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public abstract class ApiRequest {
+public class Extractor {
 
-    public String toJson() {
-        return new Gson().toJson(this);
+    public enum Type {
+        SUBSTRING,
+        REGEX,
+        START_END_CHAR
+    }
+
+    private static final Map<Type, String> TYPE_MAPPING = new HashMap<Type, String>() {{
+        put(Type.SUBSTRING, "Substring");
+        put(Type.REGEX, "Regular expression");
+        put(Type.START_END_CHAR, "Start/End character");
+    }};
+
+    public static String typeToHuman(Type type) {
+        return TYPE_MAPPING.get(type);
     }
 
 }
