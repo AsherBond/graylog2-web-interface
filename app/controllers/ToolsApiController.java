@@ -21,13 +21,12 @@ package controllers;
 
 import lib.APIException;
 import com.google.gson.Gson;
-import models.Core;
-import models.RegexTest;
+import lib.extractors.testers.RegexTest;
+import lib.extractors.testers.SplitAndIndexTest;
+import lib.extractors.testers.SubstringTest;
 import play.mvc.Result;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
@@ -36,11 +35,39 @@ public class ToolsApiController extends AuthenticatedController {
 
     public static Result regexTest(String regex, String string) {
         try {
-;           if (regex.isEmpty() || string.isEmpty()) {
+            if (regex.isEmpty() || string.isEmpty()) {
                 return badRequest();
             }
 
             return ok(new Gson().toJson(RegexTest.test(regex, string))).as("application/json");
+        } catch (IOException e) {
+            return internalServerError("io exception");
+        } catch (APIException e) {
+            return internalServerError("api exception " + e);
+        }
+    }
+
+    public static Result substringTest(int start, int end, String string) {
+        try {
+            if (start < 0 || end <= 0 || string.isEmpty()) {
+                return badRequest();
+            }
+
+            return ok(new Gson().toJson(SubstringTest.test(start, end, string))).as("application/json");
+        } catch (IOException e) {
+            return internalServerError("io exception");
+        } catch (APIException e) {
+            return internalServerError("api exception " + e);
+        }
+    }
+
+    public static Result splitAndIndexTest(String splitBy, int index, String string) {
+        try {
+            if (splitBy.isEmpty()|| index < 0 || string.isEmpty()) {
+                return badRequest();
+            }
+
+            return ok(new Gson().toJson(SplitAndIndexTest.test(splitBy, index, string))).as("application/json");
         } catch (IOException e) {
             return internalServerError("io exception");
         } catch (APIException e) {

@@ -1,0 +1,24 @@
+@(field: lib.plugin.configuration.DropdownField)
+
+<label>@field.getHumanName</label>
+<span class="help-block">@field.getDescription</span>
+
+<select name="configuration_@field.getTitle"
+        class="input-xlarge"
+        @if(!field.isOptional) {
+            required
+        }
+>
+
+@for((k,v) <- field.getValues()) {
+    <option value="@k"
+
+    @if(!field.getDefaultValue().toString().isEmpty() && field.getDefaultValue().toString().equals(k)) {
+        selected="selected"
+    }
+    >
+        @v
+    </option>
+}
+
+</select>

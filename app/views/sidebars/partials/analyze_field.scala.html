@@ -1,0 +1,55 @@
+@(f: lib.Field)
+<div class="analyze-field" style="display: none;">
+    <a href="#" class="btn btn-info btn-mini generate-overview" data-field="@f.getName">Overview</a>
+
+    <div class="btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" href="#">
+            Generate chart
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+            <li><a href="#">Line chart</a></li>
+            <li><a href="#">Pie chart</a></li>
+            <li><a href="#">Bar chart</a></li>
+        </ul>
+    </div>
+
+    <div class="overview" style="display: none;">
+        <div class="spinner">
+            <h4><i class='icon-refresh icon-spin'></i> &nbsp;Loading statistics.</h4>
+        </div>
+
+        <div class='wrong-type' style="display: none;">
+            <i class="icon icon-info"></i>
+            Statistical analysis is only available for numeric field types.
+        </div>
+
+        <div class="analyzer-content" style="display: none;">
+            <dl>
+                <dt>Total messages:</dt>
+                <dd class="count"></dd>
+
+                <dt>Mean:</dt>
+                <dd class="mean"></dd>
+
+                <dt>Std. deviation:</dt>
+                <dd class="stddev"></dd>
+
+                <dt>Minimum:</dt>
+                <dd class="min"></dd>
+
+                <dt>Maximum:</dt>
+                <dd class="max"></dd>
+
+                <dt>Sum:</dt>
+                <dd class="sum"></dd>
+
+                <dt>Variance:</dt>
+                <dd class="variance"></dd>
+
+                <dt>Sum of squares:</dt>
+                <dd class="squares"></dd>
+            </dl>
+        </div>
+    </div>
+</div>

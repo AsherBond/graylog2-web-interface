@@ -397,7 +397,7 @@ form #stream-rules {
     border-bottom: 2px solid #ccc;
 }
 
-.search-result-fields i {
+.search-result-fields .icon-cog {
     position: relative;
     top: 3px;
 }
@@ -536,6 +536,10 @@ form #stream-rules {
     margin-top: 15px;
 }
 
+.xtrc-list-container h2 {
+    margin-bottom: 5px;
+}
+
 .xtrc-list-container .alert {
     margin-top: 5px;
 }
@@ -564,4 +568,118 @@ form #stream-rules {
 .xtrc-wizard .btn {
     position: relative;
     top: -5px;
+}
+
+.node-row .xtrc-converters {
+    margin-top: 10px;
+}
+
+.node-row .xtrc-config li {
+    margin-left: 10px;
+}
+
+.node-row .xtrc-converters li {
+    margin-left: 10px;
+}
+
+.node-row .xtrc-converter-config li {
+    margin-left: 20px;
+}
+
+.u-light {
+    border-bottom: 1px dotted #bbb;
+}
+
+.xtrc-metrics {
+    margin-top: 7px;
+    margin-left: 5px;
+}
+
+.xtrc-metrics .span4 {
+    margin-left: 0px;
+}
+
+.xtrc-metrics h3 .unit {
+    font-size: 11px;
+}
+
+.xtrc-metrics dl {
+    margin-top: 3px;
+    margin-bottom: 0px;
+}
+
+.xtrc-metrics dt {
+    float: left;
+}
+
+.xtrc-metrics dd {
+    margin-left: 130px;
+}
+
+.xtrc-exception-bubble {
+    position: relative;
+    top: -7px;
+    margin-left: 2px;
+    cursor: pointer;
+}
+
+.extractor-condition-summary {
+    margin-left: 5px;
+    margin-top: 10px;
+}
+
+#try-xtrc-condition-result {
+    position: relative;
+    top: -5px;
+}
+
+.success-match {
+    color: #408140;
+}
+
+.fail-match {
+    color: #da4f49;
+}
+
+.input-docs {
+    margin-left: 3px;
+}
+
+.input-docs:hover {
+    text-decoration: none;
+}
+
+.open-analyze-field {
+    cursor: pointer;
+}
+
+.open-analyze-field-active {
+    color: #0085A7;
+}
+
+.analyze-field {
+    margin-top: 7px;
+    margin-left: 10px;
+}
+
+.analyzer-content dl {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-left: 3px solid #eee;
+    padding-left: 7px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.analyzer-content dt {
+    float: left;
+}
+
+.analyzer-content dd {
+    margin-left: 105px;
+}
+
+.analyze-field .overview .wrong-type {
+    margin-top: 5px;
+    color: #bbb;
 }

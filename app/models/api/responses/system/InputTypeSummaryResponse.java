@@ -21,10 +21,7 @@ package models.api.responses.system;
 
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
-import lib.plugin.configuration.BooleanField;
-import lib.plugin.configuration.NumberField;
-import lib.plugin.configuration.RequestedConfigurationField;
-import lib.plugin.configuration.TextField;
+import lib.plugin.configuration.*;
 import play.Logger;
 
 import java.util.List;
@@ -47,6 +44,9 @@ public class InputTypeSummaryResponse {
     @SerializedName("requested_configuration")
     public Map<String, Map<String, Object>> requestedConfiguration;
 
+    @SerializedName("link_to_docs")
+    public String linkToDocs;
+
     public List<RequestedConfigurationField> getRequestedConfiguration() {
         List<RequestedConfigurationField> fields = Lists.newArrayList();
         List<RequestedConfigurationField> tmpBools = Lists.newArrayList();
@@ -63,6 +63,9 @@ public class InputTypeSummaryResponse {
                         continue;
                     case "boolean":
                         tmpBools.add(new BooleanField(c));
+                        continue;
+                    case "dropdown":
+                        fields.add(new DropdownField(c));
                         continue;
                     default:
                         Logger.info("Unknown field type [" + fieldType + "].");

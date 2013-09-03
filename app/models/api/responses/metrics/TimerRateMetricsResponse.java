@@ -17,19 +17,22 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package lib;
+package models.api.responses.metrics;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class Authenticator {
+public class TimerRateMetricsResponse {
 
-    public boolean authenticate(String username, String password) {
-        if (username.equals("lennart") && password.equals("123123123")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    public TimerMetricsResponse time;
+    public RateMetricsResponse rate;
+
+    @SerializedName("duration_unit")
+    public String durationUnit;
+
+    @SerializedName("rate_unit")
+    public String rateUnit;
 
 }

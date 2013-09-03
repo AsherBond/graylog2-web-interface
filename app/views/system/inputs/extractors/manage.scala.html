@@ -26,7 +26,7 @@
             Start by loading a message so we have an example to work on.
 
             <div class="buttons">
-                <button class="btn btn-small xtrc-load-recent" data-node-id="@node.getNodeId" data-input-id="@input.getId">
+                <button class="btn btn-success btn-small xtrc-load-recent" data-node-id="@node.getNodeId" data-input-id="@input.getId">
                     Load a message recently received by this input
                 </button>
 
@@ -57,7 +57,6 @@
                 <dl class="xtrc-message-fields">
                 </dl>
             </div>
-
 
         </div>
     </div>
@@ -97,11 +96,24 @@
         @if(extractors.size() > 0) {
             @for(extractor <- extractors) {
                 <div class="row-fluid node-row">
-                    <h3><i class="icon icon-ellipsis-vertical"></i> @extractor.getTitle (@Extractor.typeToHuman(extractor.getType))</h3>
+                    <h3>
+                        <i class="icon icon-ellipsis-vertical"></i>
+                        <strong>@extractor.getTitle</strong> (@Extractor.typeToHuman(extractor.getType))
+
+                        @if(extractor.getTotalExceptions > 0) {
+                            <span class="badge badge-important xtrc-exception-bubble" data-extractor-id="@extractor.getId">
+                                @extractor.getTotalExceptions
+                            </span>
+                        }
+                    </h3>
 
                     <span class="pull-right node-row-info node-row-info-negative-correction">
                         <span class="text">Added by @views.html.partials.links.to_user(extractor.getCreatorUser)</span>
                             &nbsp;
+
+                        <button class="btn btn-mini extractor-show-details" data-extractor-id="@extractor.getId">
+                                Details
+                        </button>
 
                         <form action="@routes.ExtractorsController.delete(node.getNodeId, input.getId, extractor.getId)" method="POST">
                             <button class="btn btn-danger btn-mini" type="submit" data-confirm="Really remove extractor?">
@@ -114,13 +126,69 @@
                         @views.html.system.inputs.extractors.partials.extractor_summary(extractor)
                     </div>
 
-                    <div class="well well-small">
-                        <h4>Additional config:</h4>
-                        <ul>
-                            @for((k,v) <- extractor.getExtractorConfig) {
-                                <li>@k: @v</li>
+                    <div class="extractor-details-@extractor.getId" style="display: none;">
+
+                        @if(extractor.getTotalExceptions > 0) {
+                            <div class="alert alert-danger">
+                                This extractor has thrown <em>@extractor.getExceptions</em> exception@if(extractor.getExceptions != 1) {s}
+                                during extracting and <em>@extractor.getConverterExceptions</em>
+                                exception@if(extractor.getConverterExceptions != 1) {s}
+
+                                while converting.
+
+                                Please check the server logs for error messages because exceptions can have a severe
+                                performance impact and should be avoided.
+                            </div>
+                        }
+
+                        <div class="well well-small">
+                            <div class="xtrc-config">
+                                <h4>Configuration:</h4>
+                                <ul>
+                                    @for((k,v) <- extractor.getExtractorConfig) {
+                                        <li>
+                                            @k:
+                                            @if(v.equals(" ")){
+                                               [whitespace]
+                                            } else {
+                                                @v
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+
+                            @if(!extractor.getConverters().isEmpty) {
+                                <div class="xtrc-converters">
+                                    <h4>Converters</h4>
+                                    <ul>
+                                        @for(converter <- extractor.getConverters) {
+                                            <li>@converter.getType</li>
+
+                                            @if(!converter.getConfig.isEmpty) {
+                                                <ul class="xtrc-converter-config">
+                                                    @for((k,v) <- converter.getConfig) {
+                                                        <li>
+                                                            @k:
+                                                            @if(v.equals(" ")){
+                                                                [whitespace]
+                                                             } else {
+                                                                @v
+                                                             }
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
                             }
-                        </ul>
+                        </div>
+
+                        @views.html.system.inputs.extractors.partials.extractor_conditions(extractor)
+
+                        @views.html.system.inputs.extractors.partials.extractor_metrics(extractor.getMetrics)
+
                     </div>
                 </div>
             }

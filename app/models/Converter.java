@@ -19,8 +19,40 @@
  */
 package models;
 
+import com.google.common.collect.Maps;
+
+import java.util.Map;
+
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
 public class Converter {
+
+    public enum Type {
+        NUMERIC,
+        DATE,
+        HASH,
+        SPLIT_AND_COUNT,
+        IP_ANONYMIZER,
+        SYSLOG_PRI_LEVEL,
+        SYSLOG_PRI_FACILITY,
+        TOKENIZER
+    }
+
+    private final Type type;
+    private final Map<String, Object> config;
+
+    public Converter(Type type, Map<String, Object> config) {
+        this.type = type;
+        this.config = config;
+    }
+
+    public String getType() {
+        return this.type.toString().toLowerCase();
+    }
+
+    public Map<String, Object> getConfig() {
+        return config;
+    }
+
 }

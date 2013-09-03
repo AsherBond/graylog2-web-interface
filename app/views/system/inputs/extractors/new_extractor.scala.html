@@ -27,12 +27,42 @@
             }
 
             @if(extractorType.equals(Extractor.Type.SUBSTRING)) {
-                implement me (type: substring)
+                @views.html.system.inputs.extractors.configurations.substring()
             }
 
-            @if(extractorType.equals(Extractor.Type.START_END_CHAR)) {
-                implement me (type: start end char)
+            @if(extractorType.equals(Extractor.Type.SPLIT_AND_INDEX)) {
+                @views.html.system.inputs.extractors.configurations.split_and_index()
             }
+
+            <label class="radio">
+                <input type="radio" name="condition_type" id="no-condition-type" value="none" checked />
+                Always try to extract
+            </label>
+            <label class="radio">
+                <input type="radio" name="condition_type" id="string-condition-type" value="string" />
+                Only attempt extraction if field contains string
+            </label>
+            <label class="radio">
+                <input type="radio" name="condition_type" id="regex-condition-type" value="regex" />
+                Only attempt extraction if field matches regular expression
+            </label>
+            <span class="help-block">
+                Extracting only from messages that match a certain condition helps you
+                avoiding wrong or unnecessary extractions and can also save CPU resources.
+            </span>
+
+            <div id="condition-value-input" style="display: none;">
+                <div class="input-append">
+                    <label for="condition_value"></label>
+                    <input name="condition_value" id="condition_value" type="text" class="input-xlarge" />
+
+                    <button class="btn btn-info try-xtrc-condition" type="button" style="display: none;">
+                        Try!
+                    </button>
+                </div>
+
+                <div id="try-xtrc-condition-result" style="display: none;">Matches! Extractor would run against this example.</div>
+            </div>
 
             <label for="target_field">Store as field:</label>
             <input name="target_field" id="target_field" type="text" class="input-xlarge" required />
@@ -63,6 +93,11 @@
                     <option value="number">Numeric</option>
                     <option value="date">Date</option>
                     <option value="hash">Hash</option>
+                    <option value="split-and-count">Split & Count</option>
+                    <option value="tokenizer">Key=Value pairs to fields</option>
+                    <option value="ip-anonymizer">Anonymize IPv4 addresses</option>
+                    <option value="syslog-pri-level">Syslog level from PRI</option>
+                    <option value="syslog-pri-facility">Syslog facility from PRI</option>
                 </select>
                 <button class="btn btn-info">Add</button>
             </div>
@@ -70,6 +105,11 @@
             @views.html.system.inputs.extractors.converters.numeric()
             @views.html.system.inputs.extractors.converters.date()
             @views.html.system.inputs.extractors.converters.hash()
+            @views.html.system.inputs.extractors.converters.syslog_pri_level()
+            @views.html.system.inputs.extractors.converters.syslog_pri_facility()
+            @views.html.system.inputs.extractors.converters.split_and_count()
+            @views.html.system.inputs.extractors.converters.ip_anonymizer()
+            @views.html.system.inputs.extractors.converters.tokenizer()
 
             <div class="alert alert-info">
                 Please note that you cannot use the cutting feature on standard fields

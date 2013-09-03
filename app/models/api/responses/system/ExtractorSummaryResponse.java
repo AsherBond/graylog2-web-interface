@@ -20,7 +20,9 @@
 package models.api.responses.system;
 
 import com.google.gson.annotations.SerializedName;
+import models.api.responses.metrics.TimerRateMetricsResponse;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,5 +48,20 @@ public class ExtractorSummaryResponse {
 
     @SerializedName("creator_user_id")
     public String creatorUserId;
+
+    public List<Map<String, Object>> converters;
+
+    @SerializedName("condition_type")
+    public String conditionType;
+
+    @SerializedName("condition_value")
+    public String conditionValue;
+
+    public long exceptions;
+
+    @SerializedName("converter_exceptions")
+    public long converterExceptions;
+
+    public Map<String, TimerRateMetricsResponse> metrics;
 
 }

@@ -19,6 +19,8 @@
  */
 package lib;
 
+import play.Play;
+
 import java.util.Random;
 
 /**
@@ -50,4 +52,36 @@ public class Tools {
         }
     }
 
+    public static String syslogLevelToHuman(int level) {
+        switch (level) {
+            case 0:
+                return "Emergency";
+            case 1:
+                return "Alert";
+            case 2:
+                return"Critical";
+            case 3:
+                return "Error";
+            case 4:
+                return "Warning";
+            case 5:
+                return "Notice";
+            case 6:
+                return "Info";
+            case 7:
+                return "Debug";
+        }
+
+        return "Invalid";
+    }
+
+    public static byte[] appSecretAsBytes(int keySize) {
+        final String secret = Play.application().configuration().getString("application.secret");
+        final StringBuilder sb = new StringBuilder(secret);
+        while (sb.length() < keySize) {
+            sb.append(secret);
+        }
+        // sb is now at least 16 bytes long, take the first keySize
+        return sb.toString().substring(0, keySize).getBytes();
+    }
 }

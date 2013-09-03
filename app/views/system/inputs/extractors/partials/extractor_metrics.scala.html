@@ -1,0 +1,38 @@
+@(metrics: ExtractorMetrics)
+
+<div class="xtrc-metrics">
+    <h3>
+        <i class="icon icon-time"></i>
+        Metrics
+        <span class="unit">(timings in microseconds, rates in events/second since boot)</span>
+    </h3>
+
+    @if(metrics.getMeter != null) {
+        <div class="meter">
+            @metrics.getMeter.getTotal total invocations since boot,
+
+            averages:
+            @metrics.getMeter.getOneMinuteFormatted,
+            @metrics.getMeter.getFiveMinuteFormatted,
+            @metrics.getMeter.getFifteenMinuteFormatted
+        </div>
+    }
+
+    <div class="span4">
+        <h3 class="u-light" style="display: inline;">Total extractor time</h3><br />
+        @if(metrics.getTotalTiming == null) {
+            No message passed through here yet.
+        } else {
+            @views.html.partials.metrics.timing(metrics.getTotalTiming)
+        }
+    </div>
+
+    <div class="span4">
+        <h3 class="u-light" style="display: inline;">Converter time</h3><br />
+        @if(metrics.getConverterTiming == null) {
+            No message passed through here yet.
+        } else {
+            @views.html.partials.metrics.timing(metrics.getConverterTiming)
+        }
+    </div>
+</div>

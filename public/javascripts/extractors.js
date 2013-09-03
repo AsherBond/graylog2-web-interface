@@ -41,8 +41,8 @@ $(document).ready(function() {
             showSpinner(subcontainer);
             manualSelector.hide();
 
-            var index = $("input[name=message_id]", $(this)).val();
-            var messageId = $("input[name=index]", $(this)).val();
+            var index = $("input[name=index]", $(this)).val();
+            var messageId = $("input[name=message_id]", $(this)).val();
 
             $.ajax({
                 url: '/a/messages/' + index + '/' + messageId,
@@ -87,7 +87,6 @@ $(document).ready(function() {
             var field = $(this).attr("data-field");
             var value = $(this).attr("data-value");
 
-            showExtractorWizard(field, value);
             $(".xtrc-select-message").remove();
 
             var wizard = $(".xtrc-wizard");
@@ -127,7 +126,67 @@ $(document).ready(function() {
         });
     });
 
-    function highlightMatchResult(matchResult) {
+    // Try substring against example.
+    $(".xtrc-try-substring").on("click", function() {
+        var button = $(this);
+
+        var warningText = "We were not able to run the substring extraction. Please check index boundaries.";
+
+        button.html("<i class='icon-refresh icon-spin'></i> Trying...");
+        $.ajax({
+            url: '/a/tools/substring_test',
+            data: {
+                "string":$("#xtrc-example").text(),
+                "start":$("#begin_index").val(),
+                "end":$("#end_index").val()
+            },
+            success: function(result) {
+                if(result.successful) {
+                    highlightMatchResult(result);
+                } else {
+                    showWarning(warningText);
+                }
+            },
+            error: function() {
+                showError(warningText);
+            },
+            complete: function() {
+                button.html("Try!");
+            }
+        });
+    });
+
+    // Try split&index against example.
+    $(".xtrc-try-splitandindex").on("click", function() {
+        var button = $(this);
+
+        var warningText = "We were not able to run the split&index extraction. Please check your parameters.";
+
+        button.html("<i class='icon-refresh icon-spin'></i> Trying...");
+        $.ajax({
+            url: '/a/tools/split_and_index_test',
+            data: {
+                "string":$("#xtrc-example").text(),
+                "split_by":$("#split_by").val(),
+                "index":$("#index").val()
+            },
+            success: function(result) {
+                if(result.successful) {
+                    highlightMatchResult(result);
+                } else {
+                    showWarning(warningText);
+                }
+            },
+            error: function() {
+                showError(warningText);
+            },
+            complete: function() {
+                button.html("Try!");
+            }
+        });
+    });
+
+    function highlightMatchResult(result) {
         var example = $("#xtrc-example");
         // Set to original content first, so we can do this multiple times.
         example.html($("#xtrc-original-example").html());
@@ -135,16 +194,12 @@ $(document).ready(function() {
         var spanStart = "<span class='xtrc-hl'>";
         var spanEnd = "</span>";
 
-        var start = matchResult.match.start;
-        var end = matchResult.match.end+spanStart.length-1;
+        var start = result.match.start;
+        var end = result.match.end+spanStart.length;
 
         var exampleContent = $("<div/>").html(example.html()).text(); // ZOMG JS. this is how you unescape HTML entities.
-        console.log(exampleContent);
 
-        exampleContent = exampleContent.splice(start,0,spanStart);
-        exampleContent = exampleContent.splice(end,0,spanEnd);
-
-        example.html(exampleContent);
+        example.html(exampleContent.splice(start,0,spanStart).splice(end,0,spanEnd));
     }
 
     // Add converter button.
@@ -155,8 +210,80 @@ $(document).ready(function() {
         return false;
     });
 
-    function showExtractorWizard(field, value) {
-        console.log(field + ": " + value);
-    }
+    // Only allow alphanum and underscores as target_field values. Messages in graylog2-server will just ignore others.
+    $("#target_field").on("keyup", function(event){
+        var str = $(this).val();
+        if(str != "") {
+            var regex = /^[A-Za-z0-9_]+$/;
+            if (!regex.test(str)) {
+                $(this).val(str.slice(0,-1));
+                return false;
+            }
+        }
+    });
+
+    // Show extractor details.
+    $(".extractor-show-details, .xtrc-exception-bubble").on("click", function() {
+        var extractorId = $(this).attr("data-extractor-id");
+        $(".extractor-details-" + extractorId).toggle();
+    });
+
+    // No condition type.
+    $("#no-condition-type").on("click", function() {
+        $("#condition-value-input").hide();
+    });
+
+    // String condition type.
+    $("#string-condition-type").on("click", function() {
+        var div = $("#condition-value-input");
+        $(".try-xtrc-condition").hide();
+        $("#try-xtrc-condition-result").hide();
+        div.show();
+        $("input", div).attr("placeholder", "");
+        $("label", div).html("Field must include this string:");
+    });
+
+    // Regex condition type.
+    $("#regex-condition-type").on("click", function() {
+        var div = $("#condition-value-input");
+        div.show();
+        $("input", div).attr("placeholder", "^\d{3,}");
+        $("label", div).html("Field must match this regular expression:");
+        $(".try-xtrc-condition").show();
+    });
+
+    // Try regex conditions.
+    $(".try-xtrc-condition").on("click", function() {
+        var button = $(this);
+
+        button.html("<i class='icon-refresh icon-spin'></i> Trying...");
+        $.ajax({
+            url: '/a/tools/regex_test',
+            data: {
+                "string":$("#xtrc-example").text(),
+                "regex":$("#condition_value").val()
+            },
+            success: function(matchResult) {
+                var resultMsg = $("#try-xtrc-condition-result");
+                resultMsg.removeClass("success-match");
+                resultMsg.removeClass("fail-match");
+                if(matchResult.finds) {
+                    resultMsg.html("Matches! Extractor would run against this example.");
+                    resultMsg.addClass("success-match");
+                } else {
+                    resultMsg.html("Does not match! Extractor would not run.");
+                    resultMsg.addClass("fail-match");
+                }
+
+                resultMsg.show();
+            },
+            error: function() {
+                showError("Could not try regular expression. Make sure that it is valid.");
+            },
+            complete: function() {
+                button.html("Try!");
+            }
+        });
+    });
 
 });
