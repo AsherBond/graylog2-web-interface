@@ -2,6 +2,7 @@ $(document).ready(function() {
 
     $(".timerange-chooser .dropdown-menu a").on("click", function() {
         $(".timerange-selector").hide();
+        $("#universalsearch .timerange-selector-container .keyword .preview").hide();
         $("#universalsearch-rangetype").val($(this).attr("data-selector-name"));
         $(".timerange-selector input,select").attr("disabled", "disabled");
 
@@ -24,6 +25,40 @@ $(document).ready(function() {
 
         var date = new Date();
         input.val(dateTimeFormatted(date));
+    });
+
+    $("#universalsearch .timerange-selector-container .keyword input").typeWatch({
+        callback: function (string) {
+            var preview = $("#universalsearch .timerange-selector-container .keyword .preview");
+            if (string.length == 0) {
+                preview.hide();
+                return;
+            }
+
+            $.ajax({
+                url: '/a/tools/natural_date_test',
+                data: {
+                    "string": string,
+                },
+                success: function(data) {
+                    $(".not-recognized").hide();
+
+                    $(".from", preview).text(data.from);
+                    $(".to", preview).text(data.to);
+                    $(".fromto", preview).show();
+                },
+                statusCode: { 422: function() {
+                    $(".fromto", preview).hide();
+                    $(".not-recognized").show();
+                }},
+                complete: function() {
+                    preview.show();
+                }
+            });
+        },
+        wait: 500,
+        highlight: true,
+        captureLength: 0
     });
 
     function dateTimeFormatted(date) {
