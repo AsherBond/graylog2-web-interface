@@ -104,19 +104,28 @@ h4 {
 #universalsearch {
 	padding: 5px;
 	margin-bottom: 10px;
-	height: 40px;
 }
 
-#universalsearch-container {
-	width: 100%;
+.universalsearch-timerange-selector {
+    font-size: 12px;
 }
 
-#universalsearch-timerange {
-	width: 100px;
-	padding-right: 8px;
+.universalsearch-timerange-selector label {
+    font-size: 12px;
+    margin-left: 5px !important;
 }
 
-.searchform input {
+.universalsearch-timerange-selector .radio input {
+    margin-left: -17px;
+    position: relative;
+    top: -2px;
+ }
+
+.universalsearch-form {
+    margin-bottom: 0;
+}
+
+.universalsearch-form .query input {
 	font-family: monospace;
 	font-size: 13px;
 	width: 100%;
@@ -129,21 +138,9 @@ h4 {
 	-moz-transition: none;
 	transition: none;
 	outline:none;
-	padding-right: 0;
-}
-
-.searchform select {
-	width: 100px;	
-	height: 24px;
-	font-size: 12px;
-	margin: 0px;
-	position: relative;
-	top: -5px;
-}
-
-.searchform {
-	margin: 0;
 	padding: 0;
+    margin-left: 5px;
+    margin-bottom: 5px;
 }
 
 .messages {
@@ -462,7 +459,7 @@ form #stream-rules {
     margin-bottom: 10px;
 }
 
-.node-row .node-link {
+.node-link {
     color: #000;
 }
 
@@ -682,4 +679,121 @@ form #stream-rules {
 .analyze-field .statistics .wrong-type {
     margin-top: 5px;
     color: #bbb;
+}
+
+.timerange-selector-container {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    margin-left: 5px;
+    height: 25px;
+}
+
+.timerange-selector select {
+    margin-bottom: 0px;
+}
+
+#relative-timerange-selector {
+    font-size: 12px;
+    line-height: 15px;
+    height: 25px;
+}
+
+.timerange-chooser {
+    float: left;
+    margin-right: 5px;
+}
+
+.timerange-chooser .btn {
+    padding: 4px 7px;
+    line-height: 15px;
+    font-size: 12px;
+}
+
+.timerange-chooser .btn .caret {
+    margin-top: 5px;
+    margin-left: 1px;
+}
+
+.timerange-selector input {
+    height: 15px;
+    font-size: 12px;
+}
+
+.timerange-selector-container .absolute i {
+    font-size: 15px;
+    margin-left: 4px;
+    margin-right: 3px;
+    position: relative;
+    top: -2px;
+}
+
+.timerange-selector .set-to-now {
+    font-size: 12px;
+    line-height: 15px;
+    padding: 4px 4px;
+}
+
+.timerange-selector .set-to-now .icon {
+    font-size: 12px;
+    position: relative;
+    top: 1px;
+}
+
+.timerange-chooser .selected {
+    font-weight: bold;
+}
+
+.fine-log-level-controls dl {
+    margin-bottom: 0px;
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+.fine-log-level-controls dt {
+    float: left;
+    margin-right: 15px;
+}
+
+.fine-log-level-controls label {
+    margin-bottom: 0px;
+    font-size: 12px;
+}
+
+.fine-log-level-controls input {
+    position: relative;
+    top: -3px;
+    margin-right: 2px;
+}
+
+.master-node {
+    color: #f89406;
+}
+
+.permission-select {
+    width: 350px;
+}
+
+.loglevel-metrics-row {
+    margin-top: 2px;
+    margin-left: 10px;
+}
+
+.loglevel-metrics dl {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.loglevel-metrics dt {
+    float: left;
+    margin-right: 5px;
+}
+
+.subsystems {
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+.subsystems-row {
+    margin-bottom: 10px;
 }

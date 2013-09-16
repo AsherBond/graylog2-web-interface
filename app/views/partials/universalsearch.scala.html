@@ -1,0 +1,49 @@
+@(searchQuery: String)
+@import views.helpers.TimerangeSelector
+
+<div class="row-fluid no-bm">
+    <div class="span12" id="universalsearch">
+
+        <form class="universalsearch-form" action="@controllers.routes.SearchController.index()" method="GET">
+
+            <input type="hidden" name="rangetype" value="relative" id="universalsearch-rangetype" />
+
+            <div class="pull-right">
+                <input type="submit" class="btn btn-success btn-small" value="Search"/>
+            </div>
+
+            <div class="timerange-selector-container">
+                <div class="btn-group timerange-chooser">
+                    <a class="btn btn-info dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="icon icon-time"></i>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-selector-name="relative" class="selected">Relative</a></li>
+                        <li><a href="#" data-selector-name="absolute">Absolute</a></li>
+                        <li><a href="#" data-selector-name="keyword">Keyword</a></li>
+                    </ul>
+                </div>
+
+                <div class="timerange-selector relative">
+                    @partials.timerangeselectors.relative(request)
+                </div>
+
+                <div class="timerange-selector absolute" style="display: none;">
+                    @partials.timerangeselectors.absolute()
+                </div>
+
+                <div class="timerange-selector keyword" style="display: none;">
+                    @partials.timerangeselectors.keyword()
+                </div>
+            </div>
+
+            <div class="query">
+                <input type="text" class="input-medium" name="q" value="@searchQuery"
+                    placeholder='Type your search query here and press enter. ("not found AND http) OR http_response_code:[400 TO *]' />
+            </div>
+
+        </form>
+
+    </div>
+ </div>

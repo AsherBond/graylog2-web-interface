@@ -11,7 +11,7 @@ GET         /logout                                                             
 GET         /                                                                        controllers.DashboardController.index()
 
 # Search
-GET         /search                                                                  controllers.SearchController.index(q ?= "", timerange ?= "", interval ?= "")
+GET         /search                                                                  controllers.SearchController.index(q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", interval ?= "")
 
 # Messages
 GET         /messages/:index/:id/partial                                             controllers.MessagesController.singleAsPartial(index: String, id: String)
@@ -38,12 +38,19 @@ POST        /system/inputs/:node_id/:input_id/extractors/:extractor_id/delete   
 
 # Users
 GET         /system/users                                                            controllers.UsersController.index()
+GET         /a/system/users/:username                                                controllers.UsersController.uniqueUsername(username: String)
+POST        /system/users                                                            controllers.UsersController.create()
+GET         /system/users/new                                                        controllers.UsersController.newUser()
+GET         /system/users/edit/:username                                             controllers.UsersController.edit(username: String)
 
 # Systemjobs
 POST        /systemjobs/trigger                                                      controllers.SystemJobsController.trigger()
 
+# Logging
+GET         /system/logging                                                          controllers.LoggingController.index()
+
 # API: Search (i.e. facets)
-GET         /a/search/fieldstats                                                     controllers.SearchApiController.fieldStats(q ?= "", timerange ?= "", field ?= "")
+GET         /a/search/fieldstats                                                     controllers.SearchApiController.fieldStats(q ?= "", field ?= "", rangetype ?= "", relative:Integer ?= -1, interval ?= "")
 
 # API: Message counts and histograms
 GET         /a/messagecounts/histogram                                               controllers.MessageCountsController.histogram(timerange ?= "")
