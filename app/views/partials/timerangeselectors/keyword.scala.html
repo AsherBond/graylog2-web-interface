@@ -1,7 +1,16 @@
 <input type="text"
        name="keyword"
-       disabled="disabled"
+
+       @if(request.getQueryString("rangetype") != null && request.getQueryString("rangetype").equals("keyword")) {
+           value="@request.getQueryString("keyword")"
+       } else {
+           disabled="disabled"
+       }
+
+       class="validatable" data-validate="defined"
        placeholder="last week" />
+
+@views.html.partials.support.bubble.render("graylog2-web-interface/keyword-search-range-filter")
 
 <div class="preview" style="display: none;">
     <div class="fromto">

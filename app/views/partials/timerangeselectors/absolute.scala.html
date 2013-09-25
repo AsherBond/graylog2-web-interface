@@ -6,8 +6,15 @@
     <input type="text"
            name="from"
            placeholder="yyyy-MM-dd HH-mm-ss.SSS"
-           disabled="disabled"
-           class="date-select" />
+
+           @if(request.getQueryString("rangetype") != null && request.getQueryString("rangetype").equals("absolute")) {
+                value="@request.getQueryString("from")"
+           } else {
+                disabled="disabled"
+           }
+
+           class="validatable date-select"
+           data-validate="defined" />
 </div>
 
 <i class="icon icon-long-arrow-right"></i>
@@ -16,8 +23,15 @@
     <input type="text"
            name="to"
            placeholder="yyyy-MM-dd HH-mm-ss.SSS"
-           disabled="disabled"
-           class="date-select" />
+
+           @if(request.getQueryString("rangetype") != null && request.getQueryString("rangetype").equals("absolute")) {
+                value="@request.getQueryString("to")"
+           } else {
+                disabled="disabled"
+           }
+
+           class="validatable date-select"
+           data-validate="defined" />
 
     <button class="btn set-to-now" type="button">
         <i class="icon icon-magic"></i>
