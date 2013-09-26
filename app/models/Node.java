@@ -24,11 +24,12 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import lib.APIException;
 import lib.ApiClient;
-import lib.ServerNodes;
+import models.api.responses.BuffersResponse;
 import models.api.responses.NodeSummaryResponse;
 import models.api.responses.system.InputSummaryResponse;
 import models.api.responses.system.InputsResponse;
 import org.joda.time.DateTime;
+import org.slf4j.LoggerFactory;
 import play.Logger;
 
 import java.io.IOException;
@@ -40,41 +41,19 @@ import java.util.List;
 public class Node {
 
     public interface Factory {
-
-        Node fromId(String id);
         Node fromSummaryResponse(NodeSummaryResponse r);
     }
-    private final ApiClient api;
 
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(Node.class);
+    private final ApiClient api;
     private final String transportAddress;
     private final DateTime lastSeen;
+
     private final String nodeId;
     private final String shortNodeId;
     private final String hostname;
     private final boolean isMaster;
-
-    @AssistedInject
-    public Node(ApiClient api, @Assisted String nodeId) {
-        this.api = api;
-
-        NodeSummaryResponse r;
-        try {
-            r = ApiClient.get(NodeSummaryResponse.class)
-                    .node(ServerNodes.any())
-                    .path("/system/cluster/nodes/{0}", nodeId)
-                    .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (APIException e) {
-            throw new RuntimeException(e);
-        }
-        transportAddress = r.transportAddress;
-        lastSeen = new DateTime(r.lastSeen);
-        this.nodeId = r.nodeId;
-        shortNodeId = r.shortNodeId;
-        hostname = r.hostname;
-        isMaster = r.isMaster;
-    }
+    private final boolean isProcessing;
 
     @AssistedInject
     public Node(ApiClient api, @Assisted NodeSummaryResponse r) {
@@ -86,6 +65,22 @@ public class Node {
         shortNodeId = r.shortNodeId;
         hostname = r.hostname;
         isMaster = r.isMaster;
+        isProcessing = r.isProcessing;
+    }
+
+    public BufferInfo getBufferInfo() {
+        try {
+            return new BufferInfo(
+                    api.get(BuffersResponse.class)
+                    .node(this)
+                    .path("/system/buffers")
+                    .execute());
+        } catch (APIException e) {
+            log.error("Unable to read buffer info from node " + this, e);
+        } catch (IOException e) {
+            log.error("Unexpected exception", e);
+        }
+        return null;
     }
 
     public String getThreadDump() throws IOException, APIException {
@@ -133,6 +128,24 @@ public class Node {
 
     public boolean isMaster() {
         return isMaster;
+    }
+
+    public boolean isProcessing() {
+        return isProcessing;
+    }
+
+    public void pause() throws IOException, APIException {
+        api.put()
+            .path("/system/processing/pause")
+            .node(this)
+            .execute();
+    }
+
+    public void resume() throws IOException, APIException {
+        api.put()
+            .path("/system/processing/resume")
+            .node(this)
+            .execute();
     }
 
     /**
