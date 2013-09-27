@@ -1,5 +1,5 @@
-/**
- * Copyright 2013 Lennart Koopmann <lennart@torch.sh>
+/*
+ * Copyright 2013 TORCH UG
  *
  * This file is part of Graylog2.
  *
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 package models;
 
@@ -28,6 +27,7 @@ import models.api.responses.BuffersResponse;
 import models.api.responses.NodeSummaryResponse;
 import models.api.responses.system.InputSummaryResponse;
 import models.api.responses.system.InputsResponse;
+import models.api.responses.system.ServerThroughputResponse;
 import org.joda.time.DateTime;
 import org.slf4j.LoggerFactory;
 import play.Logger;
@@ -146,6 +146,17 @@ public class Node {
             .path("/system/processing/resume")
             .node(this)
             .execute();
+    }
+
+    public int getThroughput() {
+        try {
+            return api.get(ServerThroughputResponse.class).node(this).path("/system/throughput").execute().throughput;
+        } catch (APIException e) {
+            log.error("Could not load throughput for node " + this, e);
+        } catch (IOException e) {
+            log.error("Could not load throughput for node " + this, e);
+        }
+        return 0;
     }
 
     /**

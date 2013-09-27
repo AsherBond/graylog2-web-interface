@@ -1,3 +1,21 @@
+/*
+ * Copyright 2013 TORCH UG
+ *
+ * This file is part of Graylog2.
+ *
+ * Graylog2 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Graylog2 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package controllers;
 
 import com.google.common.collect.Lists;
@@ -18,10 +36,14 @@ public class SystemApiController extends AuthenticatedController {
 
     @Inject
     private NodeService nodeService;
+    @Inject
+    private ClusterService clusterService;
+    @Inject
+    private MessagesService messagesService;
 
     public Result fields() {
         try {
-            Set<String> fields = Core.getMessageFields();
+            Set<String> fields = messagesService.getMessageFields();
 
             Map<String, Set<String>> result = Maps.newHashMap();
             result.put("fields", fields);
@@ -84,29 +106,19 @@ public class SystemApiController extends AuthenticatedController {
     }
 
     public Result totalThroughput() {
-        try {
-            Map<String, Object> result = Maps.newHashMap();
-            result.put("throughput", Throughput.getTotal());
+        Map<String, Object> result = Maps.newHashMap();
+        result.put("throughput", clusterService.getClusterThroughput());
 
-            return ok(new Gson().toJson(result)).as("application/json");
-        } catch (IOException e) {
-            return internalServerError("io exception");
-        } catch (APIException e) {
-            return internalServerError("api exception " + e);
-        }
+        return ok(new Gson().toJson(result)).as("application/json");
     }
 
     public Result nodeThroughput(String nodeId) {
-        try {
-            Map<String, Object> result = Maps.newHashMap();
-            result.put("throughput", Throughput.get(nodeService.loadNode(nodeId)));
+        Map<String, Object> result = Maps.newHashMap();
+        final Node node = nodeService.loadNode(nodeId);
+        int throughput = node.getThroughput();
+        result.put("throughput", throughput);
 
-            return ok(new Gson().toJson(result)).as("application/json");
-        } catch (IOException e) {
-            return internalServerError("io exception");
-        } catch (APIException e) {
-            return internalServerError("api exception " + e);
-        }
+        return ok(new Gson().toJson(result)).as("application/json");
     }
 
     public Result pauseMessageProcessing() {

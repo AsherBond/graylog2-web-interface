@@ -1,3 +1,21 @@
+/*
+ * Copyright 2013 TORCH UG
+ *
+ * This file is part of Graylog2.
+ *
+ * Graylog2 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Graylog2 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package controllers;
 
 import com.google.common.collect.Maps;
@@ -20,11 +38,11 @@ public class MessagesController extends AuthenticatedController {
     private NodeService nodeService;
 
     @Inject
-    private MessageLoader messageLoader;
+    private MessagesService messagesService;
 
     public Result single(String index, String id) {
         try {
-            MessageResult message = messageLoader.get(index, id);
+            MessageResult message = messagesService.getMessage(index, id);
 
             Map<String, Object> result = Maps.newHashMap();
             result.put("id", message.getId());
@@ -40,7 +58,7 @@ public class MessagesController extends AuthenticatedController {
 
 	public Result singleAsPartial(String index, String id) {
 		try {
-            MessageResult message = FieldMapper.run(messageLoader.get(index, id));
+            MessageResult message = FieldMapper.run(messagesService.getMessage(index, id));
             Node sourceNode = getSourceNode(message);
 
             return ok(views.html.messages.show_as_partial.render(message, getSourceInput(sourceNode, message), sourceNode));
@@ -54,14 +72,14 @@ public class MessagesController extends AuthenticatedController {
 	
 	public Result analyze(String index, String id, String field) {
 		try {
-			MessageResult message = messageLoader.get(index, id);
+			MessageResult message = messagesService.getMessage(index, id);
 			
 			String analyzeField = (String) message.getFields().get(field);
 			if (analyzeField == null || analyzeField.isEmpty()) {
 				throw new APIException(404, "Message does not have requested field.");
 			}
 			
-			MessageAnalyzeResult result = messageLoader.analyze(index, analyzeField);
+			MessageAnalyzeResult result = messagesService.analyze(index, analyzeField);
 			return ok(new Gson().toJson(result.getTokens())).as("application/json");
 		} catch (IOException e) {
 			return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
