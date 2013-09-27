@@ -18,6 +18,8 @@
  */
 package models;
 
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import lib.APIException;
 import lib.ApiClient;
 import lib.timeranges.TimeRange;
@@ -31,16 +33,19 @@ import java.io.IOException;
 
 public class UniversalSearch {
 
+    private final ApiClient api;
     private final String query;
     private final TimeRange timeRange;
 
-    public UniversalSearch(TimeRange timeRange, String query) {
+    @AssistedInject
+    private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted String query) {
+        this.api = api;
         this.query = query;
         this.timeRange = timeRange;
     }
 
     public SearchResult search() throws IOException, APIException {
-        SearchResultResponse response = ApiClient.get(SearchResultResponse.class)
+        SearchResultResponse response = api.get(SearchResultResponse.class)
                 .path("/search/universal/{0}", timeRange.getType().toString().toLowerCase())
                 .queryParams(timeRange.getQueryParams())
                 .queryParam("query", query)
@@ -59,7 +64,7 @@ public class UniversalSearch {
     }
 
     public DateHistogramResult dateHistogram(String interval) throws IOException, APIException {
-        DateHistogramResponse response = ApiClient.get(DateHistogramResponse.class)
+        DateHistogramResponse response = api.get(DateHistogramResponse.class)
                 .path("/search/universal/{0}/histogram", timeRange.getType().toString().toLowerCase())
                 .queryParam("interval", interval)
                 .queryParam("query", query)
@@ -69,7 +74,7 @@ public class UniversalSearch {
     }
 
     public FieldStatsResponse fieldStats(String field) throws IOException, APIException {
-        return ApiClient.get(FieldStatsResponse.class)
+        return api.get(FieldStatsResponse.class)
                 .path("/search/universal/{0}/stats", timeRange.getType().toString().toLowerCase())
                 .queryParam("field", field)
                 .queryParam("query", query)
@@ -77,4 +82,7 @@ public class UniversalSearch {
                 .execute();
     }
 
+    public interface Factory {
+        UniversalSearch queryWithRange(String query, TimeRange timeRange);
+    }
 }
