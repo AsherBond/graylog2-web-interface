@@ -20,6 +20,11 @@ $(document).ready(function() {
         showQuickValues($(this).parent().parent().parent().attr("data-field"), $(this).parent().parent().parent().parent().parent(), true);
     });
 
+    $(".quickvalues .quickvalues-export").on("click", function() {
+        // TODO
+        alert("Exporting statistics is not implemented yet. (Issue: #239)");
+    });
+
     $(".quickvalues .quickvalues-close").on("click", function() {
         $(this).parent().parent().parent().hide();
     });
@@ -89,6 +94,7 @@ $(document).ready(function() {
         if (spin) {
             $(".terms-total", quickvalues).html(inlineSpin);
             $(".terms-missing", quickvalues).html(inlineSpin);
+            $(".terms-other", quickvalues).html(inlineSpin);
 
             $(".terms tbody", quickvalues).empty();
             $(".terms tbody", quickvalues).append("<tr><td colspan='3'>" + inlineSpin + "</td></tr>");
@@ -101,13 +107,10 @@ $(document).ready(function() {
         /*
          * TODO:
          *
-         *   - show and explain "other"
          *   - auto-reload
          *   - scroll positioning
-         *   - export (JSON, CSV)
          *   - show how many terms?
          *   - bar broken with many .0 percent
-         *   - do not break on long key names (metric names i.e.)
          *
          */
 
@@ -139,6 +142,7 @@ $(document).ready(function() {
             data: params,
             success: function(data) {
                 $(".terms-total", quickvalues).text(data.total);
+                $(".terms-other", quickvalues).text(data.other);
                 $(".terms-missing", quickvalues).text(data.missing);
 
                 // Remove all items before writing again.

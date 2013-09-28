@@ -22,14 +22,15 @@
         <div class="inner">
             <span class="pull-right icons">
                 <i class="icon icon-refresh quickvalues-refresh"></i>
+                <i class="icon icon-download-alt quickvalues-export"></i>
                 <i class="icon icon-remove quickvalues-close"></i>
             </span>
 
             <h2>Quick value breakdown of <em>@f.getName</em></h2>
 
             <div class="term-counts">
-                Result set has <em class="terms-total"></em> messages containing and
-                <em class="terms-missing"></em> messages not containing this field.
+                Max. 50 terms. <em class="terms-total"></em> messages with field.
+                (<em class="terms-other"></em> more, <em class="terms-missing"></em> without field.)
             </div>
 
             <div class="nano">
@@ -37,8 +38,8 @@
                     <table class="terms table table-condensed">
                         <thead>
                             <tr>
-                                <th>Value</th>
-                                <th>%</th>
+                                <th style="width: 300px;">Value</th>
+                                <th style="width: 50px;">%</th>
                                 <th>Count</th>
                             </tr>
                         </thead>
