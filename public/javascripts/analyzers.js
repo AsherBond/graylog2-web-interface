@@ -17,13 +17,21 @@ $(document).ready(function() {
     })
 
     $(".analyze-field .show-quickvalues").on("click", function(e) {
+        if ($(this).attr("disabled") == "disabled") {
+            return;
+        }
+
         e.preventDefault();
 
-        // Hide all others.
+        // Hide and disable all others.
         $(".quickvalues").hide();
+        $(".show-quickvalues").removeAttr("disabled");
+        $(".quickvalues").attr("data-active", "false");
 
-        // Mark active.
+        // Mark this one as active.
         $(".quickvalues", $(this).parent()).attr("data-active", "true");
+
+        $(this).attr("disabled", "disabled");
 
         showQuickValues($(this).attr("data-field"), $(this).parent(), true, calculateDirection($(this)), true);
     });
@@ -48,6 +56,9 @@ $(document).ready(function() {
         e.preventDefault();
 
         var quickvalues = $(".quickvalues[data-field=" + $(this).attr("data-field") + "]");
+        var button = $(".analyze-field .show-quickvalues[data-field=" + $(this).attr("data-field") + "]");
+
+        button.removeAttr("disabled");
 
         quickvalues.attr("data-active", "false");
         quickvalues.hide();
@@ -167,14 +178,14 @@ $(document).ready(function() {
         /*
          * TODO:
          *
-         *   - auto-reload enable/disable
-         *   - show button as selected, second click closes again
-         *   - min.js.map
-         *   - fix parent hell
+         *   - do not fail on huge numbers (long cast fail)
          *
          */
 
-        // TODO: deduplicate
+        if(reload) {
+            $(".quickvalues-autorefresh", quickvalues).addClass("loading");
+        }
+
         var rangeType = $("#universalsearch-rangetype-permanent").text();
         var query = $("#universalsearch-query-permanent").text();
 
@@ -235,7 +246,10 @@ $(document).ready(function() {
                 $(".nano").nanoScroller();
 
                 if (reload) {
-                    // Call again in 2.5sec
+                    // Loading complete. Set autoreload button to old color again.
+                    $(".quickvalues-autorefresh", quickvalues).removeClass("loading");
+
+                    // Call everything again in 2.5sec
                     setTimeout(function() {
                         showQuickValues(field, container, false, direction, true);
                     }, 3000)
