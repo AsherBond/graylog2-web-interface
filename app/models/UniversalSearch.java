@@ -25,6 +25,7 @@ import lib.ApiClient;
 import lib.timeranges.TimeRange;
 import models.api.responses.DateHistogramResponse;
 import models.api.responses.FieldStatsResponse;
+import models.api.responses.FieldTermsResponse;
 import models.api.responses.SearchResultResponse;
 import models.api.results.DateHistogramResult;
 import models.api.results.SearchResult;
@@ -82,7 +83,17 @@ public class UniversalSearch {
                 .execute();
     }
 
+    public FieldTermsResponse fieldTerms(String field) throws IOException, APIException {
+        return ApiClient.get(FieldTermsResponse.class)
+                .path("/search/universal/{0}/terms", timeRange.getType().toString().toLowerCase())
+                .queryParam("field", field)
+                .queryParam("query", query)
+                .queryParams(timeRange.getQueryParams())
+                .execute();
+    }
+
     public interface Factory {
         UniversalSearch queryWithRange(String query, TimeRange timeRange);
     }
+
 }

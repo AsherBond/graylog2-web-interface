@@ -12,10 +12,22 @@ $(document).ready(function() {
         showStatistics($(this).attr("data-field"), container);
     })
 
+    $(".analyze-field .show-quickvalues").on("click", function() {
+        showQuickValues($(this).attr("data-field"), $(this).parent(), true);
+    });
+
+    $(".quickvalues .quickvalues-refresh").on("click", function() {
+        showQuickValues($(this).parent().parent().parent().attr("data-field"), $(this).parent().parent().parent().parent().parent(), true);
+    });
+
+    $(".quickvalues .quickvalues-close").on("click", function() {
+        $(this).parent().parent().parent().hide();
+    });
+
     function showStatistics(field, container) {
         var statistics = $(".statistics", container);
 
-        // TODO: read this from somewhere stored once.
+        // TODO: deduplicate
         var rangeType = $("#universalsearch-rangetype-permanent").text();
         var query = $("#universalsearch-query-permanent").text();
 
@@ -37,8 +49,6 @@ $(document).ready(function() {
                 params["keyword"] = $("#universalsearch-keyword-permanent").text();
                 break;
         }
-
-        params["foo"] = "bar";
 
         $.ajax({
             url: '/a/search/fieldstats',
@@ -70,5 +80,112 @@ $(document).ready(function() {
             }
         });
     }
+
+    function showQuickValues(field, container, spin) {
+        var quickvalues = $(".quickvalues", container);
+
+        var inlineSpin = "<i class='icon icon-spinner icon-spin'></i>";
+
+        if (spin) {
+            $(".terms-total", quickvalues).html(inlineSpin);
+            $(".terms-missing", quickvalues).html(inlineSpin);
+
+            $(".terms tbody", quickvalues).empty();
+            $(".terms tbody", quickvalues).append("<tr><td colspan='3'>" + inlineSpin + "</td></tr>");
+
+            $(".terms-distribution", quickvalues).hide();
+        }
+
+        quickvalues.show();
+
+        /*
+         * TODO:
+         *
+         *   - show and explain "other"
+         *   - auto-reload
+         *   - scroll positioning
+         *   - export (JSON, CSV)
+         *   - show how many terms?
+         *   - bar broken with many .0 percent
+         *   - do not break on long key names (metric names i.e.)
+         *
+         */
+
+        // TODO: deduplicate
+        var rangeType = $("#universalsearch-rangetype-permanent").text();
+        var query = $("#universalsearch-query-permanent").text();
+
+        var params = {
+            "rangetype": rangeType,
+            "q": query,
+            "field": field
+        }
+
+        switch(rangeType) {
+            case "relative":
+                params["relative"] = $("#universalsearch-relative-permanent").text();
+                break;
+            case "absolute":
+                params["from"] = $("#universalsearch-from-permanent").text();
+                params["to"] = $("#universalsearch-to-permanent").text();
+                break;
+            case "keyword":
+                params["keyword"] = $("#universalsearch-keyword-permanent").text();
+                break;
+        }
+
+        $.ajax({
+            url: '/a/search/fieldterms',
+            data: params,
+            success: function(data) {
+                $(".terms-total", quickvalues).text(data.total);
+                $(".terms-missing", quickvalues).text(data.missing);
+
+                // Remove all items before writing again.
+                $(".terms tbody", quickvalues).empty();
+                $(".terms-distribution", quickvalues).empty();
+
+                $(".terms-distribution", quickvalues).show();
+
+                var colors = d3.scale.category20c();
+
+                sortedKeys = Object.keys(data.terms).sort(function(a,b){return data.terms[b] - data.terms[a]});
+
+                for(var i = 0; i < sortedKeys.length; i++){
+                    var key = sortedKeys[i];
+                    var val = data.terms[key];
+
+                    var percent = (val/data.total*100).toFixed(2);
+
+                    $(".terms tbody", quickvalues).append("<tr data-i='" + i + "' data-name='" + key + "'><td>" + key + "</td><td>" + percent + "%</td><td>" + val + "</td></tr>");
+                    $(".terms-distribution", quickvalues).append("<div class='terms-bar terms-bar-" + i + "' style='width: " + percent + "%; background-color: " + colors(i) + ";'></div>");
+                }
+            },
+            error: function(data) {
+                if(data.status != 400) {
+                    statistics.hide();
+                    showError("Could not load quick values.");
+                }
+            },
+            complete: function() {
+                $(".nano").nanoScroller();
+                $(".terms tbody tr", container)
+                    .on("mouseenter", highlightTermsBar)
+                    .on("mouseleave", resetTermsBar);
+            }
+        });
+    }
+
+    function highlightTermsBar() {
+        var bar = $(".terms-bar-" + $(this).attr("data-i"));
+        bar.attr("data-original-color", bar.css("background-color"));
+        bar.css("background-color", "#dd514c");
+    }
+
+    function resetTermsBar() {
+        var bar = $(".terms-bar-" + $(this).attr("data-i"));
+        bar.css("background-color", bar.attr("data-original-color"));
+    }
+
 
 });
