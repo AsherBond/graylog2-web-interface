@@ -75,6 +75,13 @@ h4 {
 	border-bottom: 1px dotted #4DBCE9;
 }
 
+#footer {
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
 #logout {
 	margin-top: -11px;
 }
@@ -94,7 +101,6 @@ h4 {
 
 #sidebar {
 	height: 100%;
-	padding-bottom: 100px;
 }
 
 #sidebar-inner {
@@ -266,6 +272,11 @@ form #stream-rules {
 
 .notifications-none {
     margin-top: 10px;
+}
+
+.notification-badge-link:hover {
+    border: 0px !important;
+    text-decoration: none !important;
 }
 
 .row-fluid {
@@ -959,3 +970,42 @@ form #stream-rules {
 
 .nano .pane   { background: #888; }
 .nano .slider { background: #111; }
+
+.preview-welcome {
+    margin-top: 5px;
+}
+
+.preview-welcome .important {
+    color: #b94a48;
+    margin-bottom: 0px;
+}
+
+.preview-welcome .contact {
+    margin-top: 5px;
+}
+
+.preview {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.preview .github {
+    font-size: 12px;
+}
+
+.preview .icon {
+    color: #000;
+}
+
+#sidebar .menu a {
+    display: block;
+    font-size: 13px;
+    padding: 5px 10px;
+}
+
+#sidebar .menu a:hover {
+    background-color: #ccc;
+    text-decoration: none !important;
+}
