@@ -22,7 +22,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
-import com.typesafe.config.*;
+import com.typesafe.config.ConfigFactory;
 import lib.ApiClient;
 import lib.ServerNodesRefreshService;
 import lib.security.PlayAuthenticationListener;
@@ -49,7 +49,6 @@ import play.GlobalSettings;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -61,11 +60,14 @@ public class Global extends GlobalSettings {
 
     @Override
 	public void onStart(Application app) {
-System.out.println("START");
         final String appSecret = app.configuration().getString("application.secret");
         if (appSecret == null || appSecret.isEmpty()) {
             log.error("Please configure application.secret in your conf/graylog2-web-interface.conf");
             throw new IllegalStateException("No application.secret configured.");
+        }
+        if (appSecret.length() < 16) {
+            log.error("Please configure application.secret in your conf/graylog2-web-interface.conf to be longer than 16 characters. Suggested is using pwgen -s 96 or similar");
+            throw new IllegalStateException("application.secret is too short, use at least 16 characters! Suggested is to use pwgen -s 96 or similar");
         }
 
         final String graylog2ServerUris = app.configuration().getString("graylog2-server.uris", "");
@@ -132,6 +134,13 @@ System.out.println("START");
 
     @Override
     public Configuration onLoadConfig(Configuration configuration, File file, ClassLoader classLoader) {
+        /*
+         *
+         * This is merging the standard bundled application.conf with our graylog2-web-interface.conf.
+         * The application.conf must always be empty when packaged so there is nothing hidden from the user.
+         * We are merging, because the Configuration object alreay contains some information the web-interface needs.
+         *
+         */
         return new Configuration(
                 ConfigFactory.parseFileAnySyntax(new File("conf/graylog2-web-interface.conf"))
                         .withFallback(configuration.getWrappedConfiguration().underlying())

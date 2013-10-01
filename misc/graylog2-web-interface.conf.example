@@ -1,0 +1,13 @@
+# graylog2-server REST URIs (one or more, comma separated) For example: "http://127.0.0.1:12900/,http://127.0.0.1:12910/"
+graylog2-server.uris=""
+
+# Secret key
+# ~~~~~
+# The secret key is used to secure cryptographics functions. Set this to a long and randomly generated string.
+# If you deploy your application to several instances be sure to use the same key!
+# Generate for example with: pwgen -s 96
+application.secret=""
+
+# HTTP listen port and address (Default: 0.0.0.0:9000)
+#http.http.port=9000
+#http.address=0.0.0.0
