@@ -6,7 +6,7 @@ jdk:
 - openjdk6
 env:
   global:
-  - PLAY_VERSION=2.1.4
+  - PLAY_VERSION=2.2.0
   - secure: |-
       x85VA9iP+/ZkBaWiupbGeJBDM4MBTp98yBVnWIe+vbWMj07zmvrIfM6rsdgT
       hZ1uBgEzGfpZ/vnU8CQN6KYXmyG2Vy4j2RlOhHf7aChNh38VzCq+97gXmLCR
@@ -18,7 +18,12 @@ env:
 before_script:
 - wget http://downloads.typesafe.com/play/${PLAY_VERSION}/play-${PLAY_VERSION}.zip
 - unzip -q play-${PLAY_VERSION}.zip
+- travis/graylog2-server.sh
 script: play-${PLAY_VERSION}/play test
+after_script: ps awux | grep graylog2-server
+services:
+  - mongodb
+  - elasticsearch
 addons:
   sauce_connect: true
 notifications:
