@@ -32,6 +32,7 @@ config/deploy.rb
 .ecltarget
 >>>>>>> ad69f75ad330a2b40ef31394d435e3bf121179b9
 
+conf/development.conf
 
 .target
 .DS_Store
