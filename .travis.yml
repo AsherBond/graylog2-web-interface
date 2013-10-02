@@ -3,7 +3,6 @@ language: java
 jdk:
 - oraclejdk7
 - openjdk7
-- openjdk6
 env:
   global:
   - PLAY_VERSION=2.2.0
@@ -18,16 +17,16 @@ env:
 before_script:
 - wget http://downloads.typesafe.com/play/${PLAY_VERSION}/play-${PLAY_VERSION}.zip
 - unzip -q play-${PLAY_VERSION}.zip
-- # travis/graylog2-server.sh
+- play-${PLAY_VERSION}/play update
+- travis/graylog2-server.sh
 script: play-${PLAY_VERSION}/play test
 after_script:
 - kill `cat $HOME/graylog2-server/graylog2-travis-server.pid`
-- cat $HOME/.m2/repository/javax/inject/javax.inject/1/_maven.repositories
 services:
   - mongodb
   - elasticsearch
 addons:
-  sauce_connect: false
+  sauce_connect: true
 notifications:
   campfire:
     rooms:
