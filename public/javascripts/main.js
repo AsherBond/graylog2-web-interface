@@ -131,7 +131,7 @@ $(document).ready(function() {
                 },
                 error: function() {
                     $(".total-throughput").html("?");
-                    $(".total-nodes").html("?");
+                    $(".total-nodes").html("");
                 },
                 complete: function() {
                     setTimeout(updateTotalThroughput, 1000);
@@ -557,6 +557,10 @@ function showWarning(message) {
 String.prototype.splice = function( idx, rem, s ) {
     return (this.slice(0,idx) + s + this.slice(idx + Math.abs(rem)));
 };
+
+function htmlEscape(x) {
+    return $('<div/>').text(x).html();
+}
 
 function delayedAjaxCallOnKeyup(el, callback, delay) {
     var timer = null;
