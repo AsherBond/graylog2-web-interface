@@ -447,6 +447,25 @@ $(document).ready(function() {
             return;
         }
 
+        // escape common lucene special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \
+        value = value.replace(/\+/, "\\+", "g");
+        value = value.replace(/-/, "\\-", "g");
+        value = value.replace(/!/, "\\!", "g");
+        value = value.replace(/\\^/, "\\^", "g");
+        value = value.replace(/"/, "\\\"", "g");
+        value = value.replace(/~/, "\\~", "g");
+        value = value.replace(/\*/, "\\*", "g");
+        value = value.replace(/\?/, "\\?", "g");
+        value = value.replace(/:/, "\\:", "g");
+        value = value.replace(/\\/, "\\\\", "g");
+        value = value.replace(/\|\|/, "\\|\\|", "g");
+        value = value.replace(/&&/, "\\&\\&", "g");
+        value = value.replace(/\[/, "\\[", "g");
+        value = value.replace(/\]/, "\\]", "g");
+        value = value.replace(/\(/, "\\(", "g");
+        value = value.replace(/\)/, "\\)", "g");
+        value = value.replace(/\{/, "\\}", "g");
+        value = value.replace(/\}/, "\\}", "g");
         var ourQuery = field + ":" + value;
         var query = $("#universalsearch-query");
 
@@ -472,6 +491,10 @@ $(document).ready(function() {
 
     $("#scroll-to-search-hint, #scroll-to-search-hint i").on("click", function() {
         $("html, body").animate({ scrollTop: 0 }, "fast");
+    });
+
+    $("#global-throughput").on("click", function() {
+        window.location.href = "/system";
     });
 
     function scrollToSearchbarHint() {
