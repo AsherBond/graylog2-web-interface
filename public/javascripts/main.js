@@ -183,6 +183,15 @@ $(document).ready(function() {
         });
     })();
 
+    // Call resizedWindow() only at end of resize event so we do not trigger all the time while resizing.
+    var resizeMutex;
+    $(window).resize(function() {
+        clearTimeout(resizeMutex);
+        resizeMutex = setTimeout(function() {
+            onResizedWindow();
+        }, 200);
+    });
+
     // Close a notification.
     $(".delete-notification").on("click", function() {
         if (!confirm("Really delete this notification?")) {
@@ -470,7 +479,12 @@ $(document).ready(function() {
         var query = $("#universalsearch-query");
 
         if (e.shiftKey) {
-            // Shift key was pressed. Replace full query and search directly.
+            // Shift key was pressed. Negate!
+            ourQuery = "NOT " + ourQuery;
+        }
+
+        if (e.altKey) {
+            // CTRL key was pressed. Search immediately!
             query.val(ourQuery);
             query.effect("bounce", { complete: function() {
                 $("#universalsearch form").submit();
@@ -481,7 +495,7 @@ $(document).ready(function() {
             var originalQuery = query.val();
 
             // If the query is "*", replace it fully. Makes no sense to generate "* AND foo:bar". (even though it would work)
-            if ($.trim(originalQuery) == "*") {
+            if ($.trim(originalQuery) == "*" || $.trim(originalQuery) == "") {
                 query.val(ourQuery);
             } else {
                 query.val(originalQuery + " AND " + ourQuery)
@@ -550,8 +564,24 @@ $(document).ready(function() {
 
         setTimeout(fixSidebarForWindow, 250);
     })();
+
+    function onResizedWindow(){
+        drawResultGraph();
+    }
 	
 });
+
+function searchDateTimeFormatted(date) {
+    var day = ('0' + date.getDate()).slice(-2); // wtf javascript. this returns the day.
+    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+    var year = date.getFullYear();
+
+    var hour = ('0' + date.getHours()).slice(-2);
+    var minute = ('0' + date.getMinutes()).slice(-2);
+    var second = ('0' + date.getSeconds()).slice(-2);
+
+    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+}
 
 function showError(message) {
     toastr.error(message, "Error", {
@@ -600,4 +630,13 @@ function delayedAjaxCallOnKeyup(el, callback, delay) {
         callback();
     };
     el = null;
+}
+
+function hideSidebar() {
+    $("#sidebar").hide();
+    $("#main-content").removeClass("span8");
+    $("#main-content").addClass("span12");
+
+    // Rebuild search result graph. (only doing something is there is one)
+    drawResultGraph();
 }
