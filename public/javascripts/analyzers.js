@@ -348,6 +348,7 @@ $(document).ready(function() {
          *   - spinner
          *   - avoid multiple graphs of same type
          *   - export to image, ...
+         *   - only on numerical
          *   - persist in localstorage
          */
 
@@ -373,7 +374,6 @@ $(document).ready(function() {
                     height: 175,
                     interpolation: "linear",
                     renderer: "bar",
-                    stroke: true,
                     series: [ {
                         name: "value",
                         data: data.values,
@@ -391,13 +391,32 @@ $(document).ready(function() {
                     ticksTreatment: "glow"
                 });
 
+                new Rickshaw.Graph.HoverDetail({
+                    graph: graph,
+                    formatter: function(series, x, y) {
+                        var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+                        var swatch = '<span class="detail_swatch"></span>';
+                        var content = field + ': ' + parseInt(y) + '<br>' + date;
+                        return content;
+                    }
+                });
+
+                new Rickshaw.Graph.Graylog2Selector( {
+                    graph: graph
+                });
+
                 graph.render();
 
                 fieldGraphs[field] = graph;
             },
             error: function(data) {
-                showError("Could not load histogram.");
+                if(data.status != 400) {
+                    showError("Could not load histogram.");
+                }
             },
+            statusCode: { 400: function() {
+                alert("Line charts are only available for numeric field types.");
+            }},
             complete: function() {}
         });
     }
@@ -406,7 +425,17 @@ $(document).ready(function() {
     $("ul.type-selector li a").live("click", function(e) {
         e.preventDefault();
         var graph = fieldGraphs[$(this).closest("ul").attr("data-field")];
-        graph.setRenderer($(this).attr("data-type"));
+        var type = $(this).attr("data-type");
+        graph.setRenderer(type);
+
+        if (type == "scatterplot") {
+            graph.renderer.dotSize = 2;
+        }
+
+        if (type == "area") {
+            graph.renderer.stroke = true;
+        }
+
         graph.render();
 
         $("a", $(this).closest("ul")).removeClass("selected");
