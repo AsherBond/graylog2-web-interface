@@ -20,19 +20,23 @@ package models;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import lib.APIException;
 import lib.ApiClient;
 import lib.ExclusiveInputException;
+import lib.metrics.Metric;
 import models.api.requests.InputLaunchRequest;
 import models.api.responses.BuffersResponse;
 import models.api.responses.NodeSummaryResponse;
 import models.api.responses.SystemOverviewResponse;
+import models.api.responses.metrics.MetricsListResponse;
 import models.api.responses.system.*;
 import models.api.responses.system.loggers.LoggerSummary;
 import models.api.responses.system.loggers.LoggersResponse;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.LoggerFactory;
 import play.Logger;
 import play.mvc.Http;
@@ -42,6 +46,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -295,6 +300,16 @@ public class Node {
         return systemInfo.isProcessing;
     }
 
+    public Map<String, Metric> getMetrics(String namespace) throws APIException, IOException {
+        MetricsListResponse response = api.get(MetricsListResponse.class)
+                .node(this)
+                .path("/system/metrics/namespace/{0}", namespace)
+                .expect(200, 404)
+                .execute();
+
+        return response.getMetrics();
+    }
+
     public void pause() throws IOException, APIException {
         api.put()
             .path("/system/processing/pause")
@@ -347,6 +362,10 @@ public class Node {
         return failureCount.get();
     }
 
+    public DateTime getLastContact() {
+        return lastContact;
+    }
+
     public void merge(Node updatedNode) {
         log.debug("Merging node {} in this node {}", updatedNode, this);
         this.lastSeen = updatedNode.lastSeen;
@@ -357,7 +376,7 @@ public class Node {
     }
 
     public void touch() {
-        this.lastContact = DateTime.now();
+        this.lastContact = DateTime.now(DateTimeZone.UTC);
         setActive(true);
     }
 

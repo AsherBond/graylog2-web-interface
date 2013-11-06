@@ -173,7 +173,13 @@ $(document).ready(function() {
     })
 
     // Add stream rule to stream rule list when saved.
+    var rule_count;
     $("#add-stream-rule").on("click", function() {
+        if (rule_count == undefined) {
+            rule_count = 0;
+        } else {
+            rule_count++;
+        }
         if (!validate("#sr")) {
             return false;
         }
@@ -187,17 +193,32 @@ $(document).ready(function() {
             inverted: $("#sr-inverted-box").is(":checked")
         }
         // Add hidden field that is transmitted in form add visible entry.
-        field = "<input type='hidden' name='rules[]' value='" + JSON.stringify(rule) + "' />"
+        field = "<input type='hidden' name='rules["+rule_count+"].field' value='" + JSON.stringify(rule.field) + "' />\n" +
+            "<input type='hidden' name='rules["+rule_count+"].type' value='" + JSON.stringify(rule.type) + "' />\n" +
+            "<input type='hidden' name='rules["+rule_count+"].value' value='" + JSON.stringify(rule.value) + "' />\n" +
+            "<input type='hidden' name='rules["+rule_count+"].inverted' value='" + JSON.stringify(rule.inverted) + "' />\n"
+
         remover = "<a href='#' class='sr-remove'><i class='icon-remove'></i></a>";
-        $("#stream-rules").append("<li>" + field + $("#sr-result").html().replace(/<(?:.|\n)*?>/gm, '') + " " + remover + "</li>");
+        $("#stream-rules").append("<li id='rule'>" + field + $("#sr-result").html().replace(/<(?:.|\n)*?>/gm, '') + " " + remover + "</li>");
 
         // Remove stream rule binding.
         $(".sr-remove").on("click", function() {
+            var parent_list = $(this).parents("ul");
             $(this).parent().remove();
+            renumber_rules(parent_list);
             return false;
         });
 
         $("#new-stream-rule").modal("hide");
+
+        var renumber_rules = function($rules) {
+            $('li#rule', $rules).each(function($index) {
+                $('input', $(this)).each (function() {
+                    var new_name = $(this).attr('name').replace(/rules\[\d+\]/g, 'rules['+$index+']');
+                    $(this).attr('name', new_name);
+                });
+            });
+        }
     });
 
     // Typeahead for message fields.
@@ -312,6 +333,9 @@ $(document).ready(function() {
     // permission chooser
     $(".permission-select").chosen({search_contains:true, width:"350px", inherit_select_classes:true});
 
+    // timezone chooser
+    $(".timezone-select").chosen({search_contains:true, inherit_select_classes:true, allow_single_deselect:true});
+
     var createUsernameField = $("form#create-user-form #username");
     if (createUsernameField.length) {
         var domElement = createUsernameField[0];
@@ -399,24 +423,25 @@ $(document).ready(function() {
         }
 
         // escape common lucene special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \
-        value = value.replace(/\\/, "\\\\", "g"); // this one must be on top to avoid double-escaping lol
-        value = value.replace(/\+/, "\\+", "g");
-        value = value.replace(/-/, "\\-", "g");
-        value = value.replace(/!/, "\\!", "g");
-        value = value.replace(/\\^/, "\\^", "g");
-        value = value.replace(/"/, "\\\"", "g");
-        value = value.replace(/~/, "\\~", "g");
-        value = value.replace(/\*/, "\\*", "g");
-        value = value.replace(/\?/, "\\?", "g");
-        value = value.replace(/:/, "\\:", "g");
-        value = value.replace(/\|\|/, "\\|\\|", "g");
-        value = value.replace(/&&/, "\\&\\&", "g");
-        value = value.replace(/\[/, "\\[", "g");
-        value = value.replace(/\]/, "\\]", "g");
-        value = value.replace(/\(/, "\\(", "g");
-        value = value.replace(/\)/, "\\)", "g");
-        value = value.replace(/\{/, "\\}", "g");
-        value = value.replace(/\}/, "\\}", "g");
+        value = value.replace(/\\/g, "\\\\"); // this one must be on top to avoid double-escaping lol
+        value = value.replace(/\//g, "\\/");
+        value = value.replace(/\+/g, "\\+");
+        value = value.replace(/-/g, "\\-");
+        value = value.replace(/!/g, "\\!");
+        value = value.replace(/\\^/g, "\\^");
+        value = value.replace(/"/g, "\\\"");
+        value = value.replace(/~/g, "\\~");
+        value = value.replace(/\*/g, "\\*");
+        value = value.replace(/\?/g, "\\?");
+        value = value.replace(/:/g, "\\:");
+        value = value.replace(/\|\|/g, "\\|\\|");
+        value = value.replace(/&&/g, "\\&\\&");
+        value = value.replace(/\[/g, "\\[");
+        value = value.replace(/\]/g, "\\]");
+        value = value.replace(/\(/g, "\\(");
+        value = value.replace(/\)/g, "\\)");
+        value = value.replace(/\{/g, "\\}");
+        value = value.replace(/\}/g, "\\}");
 
         var ourQuery = field + ":" + value;
         var query = $("#universalsearch-query");
@@ -450,8 +475,33 @@ $(document).ready(function() {
         $("html, body").animate({ scrollTop: 0 }, "fast");
     });
 
+    $(".metrics-filter").on("keyup", function() {
+        var val = $(this).val();
+
+        $(".metric-list li").hide();
+        $(".metric-list li").each(function(i) {
+            if ($(this).attr("data-metricname").match(new RegExp("^" + val + ".*", "g"))) {
+               $(this).show();
+            }
+        });
+    });
+
+    $(".metric-list li .name .open").on("click", function(e) {
+        e.preventDefault();
+        $('.metric-list li .metric[data-metricname="' + $(this).attr("data-metricname") + '"]').toggle();
+    });
+
     $("#global-throughput").on("click", function() {
         window.location.href = "/system";
+    });
+
+    $(".toggle-fullscreen").on("click", function(e) {
+        e.preventDefault();
+        $(document).toggleFullScreen();
+    });
+
+    $(".number-format").each(function() {
+        $(this).text(numeral($(this).text()).format($(this).attr("data-format")));
     });
 
     function scrollToSearchbarHint() {
@@ -516,7 +566,7 @@ $(document).ready(function() {
             fieldGraphs[field].render();
         }
     }
-	
+
 });
 
 function searchDateTimeFormatted(date) {
@@ -601,5 +651,63 @@ function hideSidebar() {
     drawResultGraph();
 }
 
+function originalUniversalSearchSettings() {
+    var result = {};
+
+    result.query =  $("#universalsearch-query-permanent").text().trim();
+    result.rangeType = $("#universalsearch-rangetype-permanent").text().trim();
+
+    switch(result.rangeType) {
+        case "relative":
+            result.relative = $("#universalsearch-relative-permanent").text().trim();
+            break;
+        case "absolute":
+            result.from = $("#universalsearch-from-permanent").text().trim();
+            result.to = $("#universalsearch-to-permanent").text().trim();
+            break;
+        case "keyword":
+            result.keyword = $("#universalsearch-keyword-permanent").text().trim();
+            break;
+    }
+
+    return result;
+}
+
+function isNumber(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+// Animated change of numbers.
+(function($) {
+    $.fn.animatedIntChange = function(countTo, duration) {
+        return this.each(function() {
+            var elem = $(this);
+            var origStripped = elem.text().replace(/,/g, "");
+
+            if (!isNumber(origStripped)) {
+                elem.text(numeral(countTo).format("0,0"));
+                return;
+            }
+
+            var countFrom = parseInt(origStripped);
+            $({value: countFrom}).animate({value: countTo}, {
+                easing: "linear",
+                duration: duration,
+                step: function() {
+                    elem.text(numeral(Math.floor(this.value)).format("0,0"));
+                },
+                complete: function() {
+                    if (parseInt(elem.text()) !== countTo) {
+                        elem.text(numeral(countTo).format("0,0"));
+                    }
+                }
+            });
+        });
+    };
+})(jQuery);
+
 // This is holding all field graphs.
-fieldGraphs = [];
+fieldGraphs = {};
+
+// All dashboards.
+globalDashboards = {};

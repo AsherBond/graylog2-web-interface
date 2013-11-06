@@ -5,7 +5,7 @@ import play.Project._
 object ApplicationBuild extends Build {
 
   val appName         = "graylog2-web-interface"
-  val appVersion      = "0.20.0-preview.4"
+  val appVersion      = "0.20.0-preview.5"
 
   val appDependencies = Seq(
     cache,
@@ -21,7 +21,9 @@ object ApplicationBuild extends Build {
     "com.google.inject.extensions" % "guice-assistedinject" % "3.0",
     "javax.inject" % "javax.inject" % "1",
 
-    "org.graylog2" % "play2-graylog2_2.10" % "1.0-SNAPSHOT",
+    "org.graylog2" % "play2-graylog2_2.10" % "1.0",
+
+    "org.elasticsearch" % "elasticsearch" % "0.90.5" % "test",
 
     "org.fluentlenium" % "fluentlenium-core" % "0.9.0" % "test",
     "org.fluentlenium" % "fluentlenium-festassert" % "0.9.0" % "test",

@@ -17,14 +17,35 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package lib;
+package models.dashboards.widgets;
+
+import com.google.common.collect.Maps;
+import lib.timeranges.TimeRange;
+
+import java.util.Map;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class DateFormat {
+public class SearchResultCountWidget extends DashboardWidget {
 
-    public static final String ES_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    public static final String ES_DATE_FORMAT_NO_MS = "yyyy-MM-dd HH:mm:ss";
+    private final String query;
+    private final TimeRange timerange;
+
+    public SearchResultCountWidget(String query, TimeRange timerange) {
+        super(Type.SEARCH_RESULT_COUNT);
+
+        this.query = query;
+        this.timerange = timerange;
+    }
+
+    @Override
+    public Map<String, Object> getConfig() {
+        Map<String, Object> config = Maps.newHashMap();
+        config.putAll(timerange.getQueryParams());
+        config.put("query", query);
+
+        return config;
+    }
 
 }

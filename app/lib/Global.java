@@ -1,4 +1,4 @@
-/*
+package lib;/*
  * Copyright 2013 TORCH UG
  *
  * This file is part of Graylog2.
@@ -25,8 +25,6 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import lib.ApiClient;
-import lib.ServerNodesRefreshService;
 import lib.security.PlayAuthenticationListener;
 import lib.security.RedirectAuthenticator;
 import lib.security.RethrowingFirstSuccessfulStrategy;
@@ -39,9 +37,12 @@ import org.apache.shiro.authc.AuthenticationListener;
 import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
+import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.SimpleAccountRealm;
 import org.graylog2.logback.appender.AccessLog;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.Application;
@@ -59,7 +60,21 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class Global extends GlobalSettings {
 	private static final Logger log = LoggerFactory.getLogger(Global.class);
-    private Injector injector;
+
+    private static Injector injector;
+
+    /**
+     * Retrieve the application's global Guice injector.
+     *
+     * Unfortunately there seems to be no supported way to store custom objects in the application,
+     * thus we need to make this accessor static. However, running more than one Play application in
+     * the same JVM won't work anyway, so we are on the safe side here.
+     *
+     * @return the Guice injector for this application.
+     */
+    public static Injector getInjector() {
+        return injector;
+    }
 
     @Override
 	public void onStart(Application app) {
@@ -88,6 +103,16 @@ public class Global extends GlobalSettings {
         for (String uri : uris) {
             initialNodes[i++] = URI.create(uri);
         }
+        final String timezone = app.configuration().getString("timezone", "");
+        if (!timezone.isEmpty()) {
+            try {
+                DateTools.setApplicationTimeZone(DateTimeZone.forID(timezone));
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid timezone {} specified!", timezone);
+                throw new IllegalStateException(e);
+            }
+        }
+        log.info("Using application default timezone {}", DateTools.getApplicationTimeZone());
 
         List<Module> modules = Lists.newArrayList();
         modules.add(new AbstractModule() {
@@ -116,6 +141,13 @@ public class Global extends GlobalSettings {
                 new DefaultSecurityManager(
                         Lists.newArrayList(serverRestInterfaceRealm)
                 );
+        // disable storing sessions (TODO we might want to write a session store bridge to play's session cookie)
+        final DefaultSessionStorageEvaluator sessionStorageEvaluator = new DefaultSessionStorageEvaluator();
+        sessionStorageEvaluator.setSessionStorageEnabled(false);
+        final DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
+        subjectDAO.setSessionStorageEvaluator(sessionStorageEvaluator);
+        securityManager.setSubjectDAO(subjectDAO);
+
         final Authenticator authenticator = securityManager.getAuthenticator();
         if (authenticator instanceof ModularRealmAuthenticator) {
             ModularRealmAuthenticator a = (ModularRealmAuthenticator) authenticator;

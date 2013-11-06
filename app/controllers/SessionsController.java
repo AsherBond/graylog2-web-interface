@@ -18,8 +18,10 @@
  */
 package controllers;
 
-import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import lib.ServerNodes;
 import lib.security.Graylog2ServerUnavailableException;
+import lib.security.RedirectAuthenticator;
 import models.LoginRequest;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -28,59 +30,62 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.data.Form;
-import play.mvc.Controller;
 import play.mvc.Result;
-
-import java.util.HashMap;
 
 import static play.data.Form.form;
 
-public class SessionsController extends Controller {
+public class SessionsController extends BaseController {
 	private static final Logger log = LoggerFactory.getLogger(SessionsController.class);
 
 	final static Form<LoginRequest> userForm = form(LoginRequest.class);
-	
+
+    @Inject
+    ServerNodes serverNodes;
+	@Inject
+    RedirectAuthenticator authenticator;
+
 	public Result index() {
         // Redirect if already logged in.
-        final Subject subject = SecurityUtils.getSubject();
-        if (subject.isAuthenticated()) {
-            log.debug("User {} already authenticated, redirecting to /", subject);
-            redirect("/");
+        String loggedInUserName = authenticator.getUsername(ctx());
+        if (loggedInUserName != null) {
+            log.debug("User {} already authenticated, redirecting to /", loggedInUserName);
+            return redirect("/");
         }
         if (session("username") != null && !session("username").isEmpty()) {
             return redirect("/");
         }
-        Form<LoginRequest> form = userForm;
-        if (subject.isRemembered()) {
-            final HashMap<String, String> prefilledForm = Maps.newHashMap();
-            prefilledForm.put("username", subject.getPrincipal().toString());
-            form = userForm.bind(prefilledForm, "username");
-        }
-        return ok(views.html.sessions.login.render(form));
+        checkServerConnections();
+        return ok(views.html.sessions.login.render(userForm, !serverNodes.isConnected()));
     }
-	
-	public Result create() {
+
+    private void checkServerConnections() {
+        if (!serverNodes.isConnected()) {
+            flash("error", "No Graylog2 servers available. Cannot log in.");
+        }
+    }
+
+    public Result create() {
 		Form<LoginRequest> loginRequest = userForm.bindFromRequest();
 
 		if (loginRequest.hasErrors()) {
 			flash("error", "Please fill out all fields.");
-            return badRequest(views.html.sessions.login.render(loginRequest));
+            return badRequest(views.html.sessions.login.render(loginRequest, !serverNodes.isConnected()));
 		}
 		
 		LoginRequest r = loginRequest.get();
 
 		final Subject subject = SecurityUtils.getSubject();
 		try {
-			subject.login(new UsernamePasswordToken(r.username, r.password));
+			subject.login(new UsernamePasswordToken(r.username, r.password, request().remoteAddress()));
 			return redirect("/");
 		} catch (AuthenticationException e) {
 			log.warn("Unable to authenticate user {}. Redirecting back to '/'", r.username, e);
             if (e instanceof Graylog2ServerUnavailableException) {
-                flash("error", "Could not reach any Graylog2 server!");
+                checkServerConnections();
             } else {
                 flash("error", "Sorry, those credentials are invalid.");
             }
-			return badRequest(views.html.sessions.login.render(loginRequest));
+			return badRequest(views.html.sessions.login.render(loginRequest, !serverNodes.isConnected()));
 		}
 	}
 
