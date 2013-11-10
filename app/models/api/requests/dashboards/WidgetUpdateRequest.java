@@ -17,24 +17,15 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.responses.dashboards;
+package models.api.requests.dashboards;
 
-import com.google.gson.annotations.SerializedName;
-
-import java.util.Map;
+import models.api.requests.ApiRequest;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class DashboardWidgetResponse {
+public class WidgetUpdateRequest extends ApiRequest {
 
-    public String id;
-    public String type;
     public String description;
-
-    @SerializedName("creator_user_id")
-    public String creatorUserId;
-
-    public Map<String, Object> config;
 
 }

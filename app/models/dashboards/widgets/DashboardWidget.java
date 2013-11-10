@@ -23,10 +23,10 @@ import lib.APIException;
 import lib.ApiClient;
 import lib.timeranges.InvalidRangeParametersException;
 import lib.timeranges.TimeRange;
+import models.api.requests.dashboards.WidgetUpdateRequest;
 import models.api.responses.dashboards.DashboardWidgetResponse;
 import models.api.responses.dashboards.DashboardWidgetValueResponse;
 import models.dashboards.Dashboard;
-import play.mvc.Http;
 
 import java.io.IOException;
 import java.util.Map;
@@ -42,15 +42,13 @@ public abstract class DashboardWidget {
 
     private final Type type;
     private final String id;
+    private final String description;
     private final Dashboard dashboard;
 
-    protected DashboardWidget(Type type, Dashboard dashboard) {
-        this(type, null, dashboard);
-    }
-
-    protected DashboardWidget(Type type, String id, Dashboard dashboard) {
+    protected DashboardWidget(Type type, String id, String description, Dashboard dashboard) {
         this.type = type;
         this.id = id;
+        this.description = description;
         this.dashboard = dashboard;
     }
 
@@ -60,6 +58,10 @@ public abstract class DashboardWidget {
 
     public String getId() {
         return id;
+    }
+
+    public String getDescription() {
+        return (description == null ? "Description" : description);
     }
 
     public Dashboard getDashboard() {
@@ -73,7 +75,16 @@ public abstract class DashboardWidget {
                     .execute();
     }
 
+    public void updateDescription(ApiClient api, String newDescription) throws APIException, IOException {
+        WidgetUpdateRequest wur = new WidgetUpdateRequest();
+        wur.description = newDescription;
 
+        api.put().path("/dashboards/{0}/widgets/{1}/description", dashboard.getId(), id)
+                .onlyMasterNode()
+                .body(wur)
+                .onlyMasterNode()
+                .execute();
+    }
 
     public static DashboardWidget factory(Dashboard dashboard, DashboardWidgetResponse w) throws NoSuchWidgetTypeException, InvalidRangeParametersException {
         Type type;
@@ -88,6 +99,7 @@ public abstract class DashboardWidget {
                 return new SearchResultCountWidget(
                         dashboard,
                         w.id,
+                        w.description,
                         (String) w.config.get("query"),
                         TimeRange.factory((Map<String, Object>) w.config.get("timerange"))
                 );
