@@ -44,7 +44,9 @@ public class SearchController extends AuthenticatedController {
     private StreamService streamService;
 
     public Result indexForStream(String streamId, String q, String rangeType, int relative, String from, String to, String keyword, String interval, int page) {
-        Stream stream;
+        return ok("not implemented yet");
+
+        /*Stream stream;
         try {
             stream = streamService.get(streamId);
         } catch (IOException e) {
@@ -105,7 +107,7 @@ public class SearchController extends AuthenticatedController {
             return ok(views.html.search.results.render(currentUser(), search, searchResult, histogramResult, oldQuery, page, stream));
         } else {
             return ok(views.html.search.noresults.render(currentUser(), oldQuery));
-        }
+        }*/
     }
 
     public Result index(String q, String rangeType, int relative, String from, String to, String keyword, String interval, int page) {
@@ -116,6 +118,10 @@ public class SearchController extends AuthenticatedController {
             return status(400, views.html.errors.error.render("Invalid range parameters provided.", e2, request()));
         } catch(IllegalArgumentException e1) {
             return status(400, views.html.errors.error.render("Invalid range type provided.", e1, request()));
+        }
+
+        if (q.trim().isEmpty()) {
+            q = "*";
         }
 
         SearchResult searchResult;
