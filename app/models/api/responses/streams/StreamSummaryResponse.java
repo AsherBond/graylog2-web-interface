@@ -16,13 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  */
-package models.api.responses;
+package models.api.responses.streams;
+
+import com.google.gson.annotations.SerializedName;
+import models.api.responses.TimestampResponse;
 
 import java.util.List;
 
-public class GetStreamsResponse {
+public class StreamSummaryResponse {
 
-	public int total;
-	public List<StreamSummaryResponse> streams;
+	public String id;
+	public String title;
+	
+	@SerializedName("created_at")
+	public TimestampResponse createdAt;
+	
+	@SerializedName("creator_user_id")
+	public String creatorUserId;
+
+    @SerializedName("rules")
+    public List<StreamRuleSummaryResponse> streamRules;
+
+    public Boolean disabled;
+	
+	// public List<StreamRuleSummary> rules;
 	
 }
