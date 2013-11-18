@@ -27,9 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.ning.http.client.*;
 import lib.security.Graylog2ServerUnavailableException;
-import models.Node;
-import models.User;
-import models.UserService;
+import models.*;
 import models.api.requests.ApiRequest;
 import models.api.responses.EmptyResponse;
 import org.slf4j.Logger;
@@ -146,6 +144,7 @@ class ApiClientImpl implements ApiClient {
     public class ApiRequestBuilder<T> {
         private String pathTemplate;
         private Node node;
+        private Radio radio;
         private Collection<Node> nodes;
         private String username;
         private String password;
@@ -189,6 +188,12 @@ class ApiClientImpl implements ApiClient {
             this.node = node;
             return this;
         }
+
+        public ApiRequestBuilder<T> radio(Radio radio) {
+            this.radio = radio;
+            return this;
+        }
+
         public ApiRequestBuilder<T> nodes(Node... nodes) {
             if (this.nodes != null) {
                 // TODO makes this sane
@@ -265,13 +270,26 @@ class ApiClientImpl implements ApiClient {
         }
 
         public T execute() throws APIException, IOException {
-            if (node == null) {
-                if (nodes != null) {
-                    log.error("Multiple nodes are set, but execute() was called. This is most likely a bug and you meant to call executeOnAll()!");
-                }
-                node(serverNodes.any());
+            if (radio != null && (node != null || nodes != null)) {
+                throw new RuntimeException("You set both and a Node and a Radio as target. This is not possible.");
             }
-            final URL url = prepareUrl(node);
+
+            final ClusterEntity target;
+
+            if (radio == null) {
+                if (node == null) {
+                    if (nodes != null) {
+                        log.error("Multiple nodes are set, but execute() was called. This is most likely a bug and you meant to call executeOnAll()!");
+                    }
+                    node(serverNodes.any());
+                }
+
+                target = node;
+            } else {
+                target = radio;
+            }
+
+            final URL url = prepareUrl(target);
             final AsyncHttpClient.BoundRequestBuilder requestBuilder = requestBuilderForUrl(url);
 
             final Request request = requestBuilder.build();
@@ -287,7 +305,7 @@ class ApiClientImpl implements ApiClient {
             try {
                 Response response = requestBuilder.execute().get(timeoutValue, timeoutUnit);
 
-                node.touch();
+                target.touch();
 
                 // TODO this is wrong, shouldn't it accept some callback instead of throwing an exception?
                 if (!expectedResponseCodes.contains(response.getStatusCode())) {
@@ -316,14 +334,14 @@ class ApiClientImpl implements ApiClient {
                 }
             } catch (InterruptedException e) {
                 // TODO
-                node.markFailure();
+                target.markFailure();
             } catch (MalformedURLException e) {
                 log.error("Malformed URL", e);
                 throw new RuntimeException("Malformed URL.", e);
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof ConnectException) {
                     log.warn("Graylog2 server unavailable. Connection refused.");
-                    node.markFailure();
+                    target.markFailure();
                     throw new Graylog2ServerUnavailableException(e);
                 }
                 log.error("REST call failed", e.getCause());
@@ -331,11 +349,11 @@ class ApiClientImpl implements ApiClient {
             } catch (IOException e) {
                 // TODO
                 log.error("unhandled IOException", e);
-                node.markFailure();
+                target.markFailure();
                 throw e;
             } catch (TimeoutException e) {
                 log.warn("Timed out requesting {}", request);
-                node.markFailure();
+                target.markFailure();
             }
             // TODO should this throw an exception instead?
             return null;
@@ -445,14 +463,14 @@ class ApiClientImpl implements ApiClient {
         }
 
         // default visibility for tests
-        URL prepareUrl(Node node) {
+        URL prepareUrl(ClusterEntity target) {
             // if this is null there's not much we can do anyway...
             Preconditions.checkNotNull(pathTemplate, "path() needs to be set to a non-null value.");
 
             URI builtUrl;
             try {
                 String path = MessageFormat.format(pathTemplate, pathParams.toArray());
-                final UriBuilder uriBuilder = UriBuilder.fromUri(node.getTransportAddressUri());
+                final UriBuilder uriBuilder = UriBuilder.fromUri(target.getTransportAddress());
                 uriBuilder.path(path);
                 for (F.Tuple<String, String> queryParam : queryParams) {
                     uriBuilder.queryParam(queryParam._1, queryParam._2);
