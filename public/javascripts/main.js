@@ -553,6 +553,23 @@ $(document).ready(function() {
         $(this).text(numeral($(this).text()).format($(this).attr("data-format")));
     });
 
+    $(".moment-from-now").each(function() {
+        $(this).text(moment($(this).text()).fromNow());
+    });
+
+    $(".moment-humanize").each(function() {
+        $(this).text(moment.duration(parseInt($(this).text()), $(this).attr("data-unit")).humanize());
+    });
+
+    $(".shard-routing .shards .shard").tooltip();
+
+    $(".index-description .open-index-details").on("click", function(e) {
+        e.preventDefault();
+
+        $(".index-info", $(this).closest(".index-description")).show();
+        $(this).hide();
+    });
+
     $(".message-result-fields-range .page").on("click", function(e) {
         e.preventDefault();
 
