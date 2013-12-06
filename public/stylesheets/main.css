@@ -225,10 +225,6 @@ h4 {
 	top: 3px;	
 }
 
-#csv-download {
-    margin-left: 0.75em;
-}
-
 .sidebar-back, .sidebar-hide {
 	cursor: pointer;
 }
@@ -1472,4 +1468,12 @@ form.node-processing-change input {
 
 .system-rest dd {
     margin-left: 120px;
+}
+
+.nolink {
+    color: #000;
+}
+
+.nolink:hover {
+    text-decoration: none;
 }
