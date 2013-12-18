@@ -1,5 +1,5 @@
-/*
- * Copyright 2013 TORCH UG
+/**
+ * Copyright 2013 Lennart Koopmann <lennart@torch.sh>
  *
  * This file is part of Graylog2.
  *
@@ -15,20 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package models.api.requests;
+package models.api.responses.searches;
 
 import com.google.gson.annotations.SerializedName;
 
-import static play.data.validation.Constraints.Required;
+import java.util.Map;
 
-public class ChangePasswordRequest extends ApiRequest {
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
+public class SavedSearchSummaryResponse {
 
-    @SerializedName("old_password")
-    public String old_password;
+    public String id;
+    public String title;
+    public Map<String, Object> query;
 
-    @Required
-    @SerializedName("password")
-    public String password;
+    @SerializedName("created_at")
+    public String createdAt;
+
+    @SerializedName("creator_user_id")
+    public String creatorUserId;
 
 }

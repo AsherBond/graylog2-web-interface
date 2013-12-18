@@ -30,7 +30,7 @@ import models.UserService;
 import models.api.requests.ChangePasswordRequest;
 import models.api.requests.ChangeUserRequest;
 import models.api.requests.CreateUserRequest;
-import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.subject.Subject;
 import play.data.Form;
 import play.mvc.Result;
 import views.html.system.users.edit;
@@ -88,10 +88,14 @@ public class UsersController extends AuthenticatedController {
 
         User user = userService.load(username);
         final Form<ChangeUserRequest> form = changeUserForm.fill(new ChangeUserRequest(user));
+        boolean requiresOldPassword = checkRequireOldPassword(username);
+
         return ok(edit.render(
                 form,
                 username,
                 currentUser(),
+                user,
+                requiresOldPassword,
                 permissionsService.all(),
                 ImmutableSet.copyOf(user.getPermissions()),
                 DateTools.getGroupedTimezoneIds().asMap(),
@@ -115,8 +119,6 @@ public class UsersController extends AuthenticatedController {
                     DateTools.getGroupedTimezoneIds().asMap(),
                     bc));
         }
-        // hash it before sending it across
-        request.password = new SimpleHash("SHA-256", request.password).toString();
         // TODO PREVIEW: remove hardcoded permissions once the permission editor is ready
         request.permissions = Lists.newArrayList("*");
         userService.create(request);
@@ -141,6 +143,8 @@ public class UsersController extends AuthenticatedController {
 
     public Result saveChanges(String username) {
         final Form<ChangeUserRequest> requestForm = Tools.bindMultiValueFormFromRequest(ChangeUserRequest.class);
+        final User user = userService.load(username);
+
         if (requestForm.hasErrors()) {
             final BreadcrumbList bc = new BreadcrumbList();
             bc.addCrumb("System", routes.SystemController.index(0));
@@ -148,20 +152,34 @@ public class UsersController extends AuthenticatedController {
             bc.addCrumb("Edit " + username, routes.UsersController.editUserForm(username));
 
             final List<String> all = permissionsService.all();
+            boolean requiresOldPassword = checkRequireOldPassword(username);
 
             return badRequest(edit.render(
                     requestForm,
                     username,
                     currentUser(),
+                    user,
+                    requiresOldPassword,
                     all,
                     ImmutableSet.copyOf(requestForm.get().permissions),
                     DateTools.getGroupedTimezoneIds().asMap(),
                     bc));
         }
-        final User user = userService.load(username);
         user.update(requestForm.get());
 
         return redirect(routes.UsersController.index());
+    }
+
+    private boolean checkRequireOldPassword(String username) {
+        boolean requiresOldPassword = true;
+        final User currentUser = currentUser();
+        final Subject subject = currentUser.getSubject();
+        final String currentUserName = currentUser.getName();
+        if (subject.isPermitted("users:passwordchange:*")) {
+            // if own account, require old password, otherwise don't require it
+            requiresOldPassword = currentUserName.equals(username);
+        }
+        return requiresOldPassword;
     }
 
     public Result changePassword(String username) {
@@ -169,9 +187,10 @@ public class UsersController extends AuthenticatedController {
 
         final ChangePasswordRequest request = requestForm.get();
         final User user = userService.load(username);
-        request.old_password = new SimpleHash("SHA-256", request.old_password).toString();
-        request.password = new SimpleHash("SHA-256", request.password).toString();
 
+        if (checkRequireOldPassword(username) && request.old_password == null) {
+            requestForm.reject("Old password is required.");
+        }
         if (requestForm.hasErrors() || !user.updatePassword(request)) {
             flash("error", "Could not update the password.");
             return redirect(routes.UsersController.editUserForm(username));

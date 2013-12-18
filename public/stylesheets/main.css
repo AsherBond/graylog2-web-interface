@@ -137,6 +137,10 @@ h4 {
     top: -2px;
  }
 
+.keyword input {
+    width: 290px;
+}
+
 .universalsearch-form {
     margin-bottom: 0;
 }
@@ -787,28 +791,6 @@ form #stream-rules {
 
 .timerange-chooser .selected {
     font-weight: bold;
-}
-
-.fine-log-level-controls dl {
-    margin-bottom: 0px;
-    margin-top: 5px;
-    margin-left: 10px;
-}
-
-.fine-log-level-controls dt {
-    float: left;
-    margin-right: 15px;
-}
-
-.fine-log-level-controls label {
-    margin-bottom: 0px;
-    font-size: 12px;
-}
-
-.fine-log-level-controls input {
-    position: relative;
-    top: -3px;
-    margin-right: 2px;
 }
 
 .master-node {
@@ -1556,4 +1538,20 @@ dl.sample-message-fields {
     list-style-type: square;
     margin-left: 25px;
     margin-top: 2px;
+}
+
+.search-help {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+input#save-search-title {
+    padding: 1px;
+    padding-left: 5px;
+    font-size: 12px;
+    padding-top: 3px;
+}
+
+#saved_searches_selector_chosen {
+ font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }

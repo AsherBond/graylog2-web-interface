@@ -1,5 +1,5 @@
-/*
- * Copyright 2013 TORCH UG
+/**
+ * Copyright 2013 Lennart Koopmann <lennart@torch.sh>
  *
  * This file is part of Graylog2.
  *
@@ -15,20 +15,35 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package models.api.requests;
+package models;
 
-import com.google.gson.annotations.SerializedName;
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
+public class InternalLoggerSubsystem {
 
-import static play.data.validation.Constraints.Required;
+    private final String title;
+    private final String level;
+    private final int syslogLevel;
 
-public class ChangePasswordRequest extends ApiRequest {
+    public InternalLoggerSubsystem(String title, String level, int syslogLevel) {
+        this.title = title;
+        this.level = level;
+        this.syslogLevel = syslogLevel;
+    }
 
-    @SerializedName("old_password")
-    public String old_password;
+    public String getTitle() {
+        return title;
+    }
 
-    @Required
-    @SerializedName("password")
-    public String password;
+    public String getLevel() {
+        return level;
+    }
+
+    public int getSyslogLevel() {
+        return syslogLevel;
+    }
 
 }

@@ -54,6 +54,99 @@ $(document).ready(function() {
         captureLength: 0
     });
 
+    // Save a search: Open save dialog.
+    $(".save-search").on("click", function(e) {
+        e.preventDefault();
+
+        $(this).hide();
+        $(".save-search-form").show();
+    });
+
+    // Save a search: Ask for title and actually trigger saving.
+    $(".save-search-form button.do-save").on("click", function(e) {
+        e.preventDefault();
+
+        var input = $("#save-search-title");
+        var button = $(this);
+        var title = input.val();
+
+        button.prop("disabled", true);
+        input.prop("disabled", true);
+
+        button.html("<i class='icon icon-spin icon-spinner'></i>&nbsp; Saving");
+
+        var params = {};
+        params.query = originalUniversalSearchSettings();
+        params.title = title
+
+        $.ajax({
+            url: '/savedsearches/create',
+            type: 'POST',
+            data: {
+                "params": JSON.stringify(params)
+            },
+            success: function(data) {
+                button.html("<i class='icon icon-ok'></i>&nbsp; Saved");
+            },
+            error: function(data) {
+                button.html("<i class='icon icon-warning-sign'></i>&nbsp; Failed");
+                button.switchClass("btn-success", "btn-danger");
+                showError("Could not save search.")
+            }
+        });
+
+    });
+
+    // Enable save button when text is entered.
+    $("#save-search-title").on("keyup", function(e) {
+        var button = $(".save-search-form button.do-save");
+        if($(this).val() != undefined && $(this).val().trim() != "") {
+            button.prop("disabled", false);
+        } else {
+            button.prop("disabled", true);
+        }
+    });
+
+    // Saved search selected. Get details and send to page that redirects to the actual search.
+    $("#saved-searches-selector").on("change", function(e) {
+        // Get
+        var searchId = $("#saved-searches-selector").val();
+        window.location = "/savedsearches/" + encodeURI(searchId) + "/execute";
+    });
+
+    // Fill saved searches selector.
+    if ($("#saved-searches-selector").size() > 0) {
+        $.ajax({
+            url: '/savedsearches',
+            type: 'GET',
+            success: function(data) {
+                // Convert to array for sorting.
+                var array = $.map(data, function(value, index) {
+                    return [value];
+                });
+
+                // fml, js
+                array.sort(function(a, b) {
+                    var textA = a.title.toUpperCase();
+                    var textB = b.title.toUpperCase();
+                    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                });
+
+                for (var i = 0; i < array.length; i++) {
+                    var search = array[i];
+                    var option = "<option value='" + htmlEscape(search.id) + "'>" + htmlEscape(search.title) + "</option>";
+                    $("#saved-searches-selector").append(option);
+                }
+
+                $("#saved-searches-selector").show();
+                $("#saved-searches-selector").chosen({
+                    disable_search_threshold: 3,
+                    no_results_text: "No such search found:"
+                });
+            }
+        });
+    }
+
 });
 
 function activateTimerangeChooser(selectorName, link) {

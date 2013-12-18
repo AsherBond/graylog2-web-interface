@@ -4,29 +4,29 @@ $(document).ready(function() {
 	$(".messages tbody > tr").bind("click", function() {
 		messageId = $(this).attr("data-message-id");
 		index = $(this).attr("data-source-index");
-		
+
 		// Highlight message.
 		$(".messages tbody > tr").removeClass("message-highlighted");
 		$(this).addClass("message-highlighted");
-		
+
 		// Hide original sidebar and show ours again if it was already hidden before.
 		$("#sidebar-original").hide();
 		$("#sidebar-replacement").show();
-		
+
 		// Show loading spinner. Will be replaced onSuccess.
 		spinner = "<h2><i class='icon-refresh icon-spin'></i> &nbsp;Loading message</h2>";
 		$("#sidebar-replacement").html(spinner);
-		
+
 		$.get("/messages/" + index + "/" + messageId + "/partial", function(data) {
 			$("#sidebar-replacement").html(data);
 		})
-		
+
 		.fail(function() { displayFailureInSidebar("Sorry, could not load message."); })
-		
+
 		.complete(function() {
 
             sizeSidebar();
-			
+
 			// Inject terms of a message when modal is requested.
 			$('.terms-msg-modal').on('show', function() {
                 messageId = $(this).attr("data-msg-id");
@@ -52,7 +52,7 @@ $(document).ready(function() {
                     // Mark as already loaded so we don't add the terms again on next open.
                     $(this).attr("data-loaded", "true");
                 }
-				
+
 				// Show as list link.
 				list_link.bind("click", function() {
 					list.addClass("as-list");
@@ -62,17 +62,17 @@ $(document).ready(function() {
 			});
 		})
 	});
-	
+
 	// Date histogram resolution selector.
 	$(".date-histogram-res-selector").each(function() {
 		$(this).attr("href", "/search?" + addParameterToCurrentUrl("interval", $(this).attr("data-resolution")));
 	});
-	
+
 	// Go back in sidebar history / Show original sidebar.
 	$(".sidebar-back").live("click", function() {
 		$("#sidebar-replacement").hide();
 		$("#sidebar-original").show();
-		
+
 		// Remove highlighting.
 		$(".messages tbody > tr").removeClass("message-highlighted");
 
@@ -93,7 +93,7 @@ $(document).ready(function() {
 		hash = $(this).attr("data-field-hash");
 		td = $(".result-td-" + hash);
 		th = $("#result-th-" + hash);
-		
+
 		if ($(this).is(':checked')) {
 			th.show();
 			td.show();
@@ -285,10 +285,6 @@ $(document).ready(function() {
         }, 150);
     }
 
-    $(".delete-user-form").on("submit", function() {
-        return confirm("Really remove user " + $(this).attr("data-username") + "?");
-    });
-
     // Universalsearch validation.
     $("#universalsearch").on("submit", function() {
         return validate("#universalsearch");
@@ -304,14 +300,36 @@ $(document).ready(function() {
        return false;
     });
 
-    // Show fine-grained log level controls.
-    $(".trigger-fine-log-level-controls").on("click", function() {
-        $(".fine-log-level-controls[data-node-id='" + $(this).attr("data-node-id") + "']").toggle();
+    // Show log level metrics.
+    $(".trigger-log-level-metrics").on("click", function(e) {
+        e.preventDefault();
+        $(".loglevel-metrics[data-node-id='" + $(this).attr("data-node-id") + "']").toggle();
     });
 
-    // Show log level metrics.
-    $(".trigger-log-level-metrics").on("click", function() {
-        $(".loglevel-metrics[data-node-id='" + $(this).attr("data-node-id") + "']").toggle();
+    // Change subsystem log level.
+    $(".subsystem .dropdown-menu a[data-level]").on("click", function(e) {
+        e.preventDefault();
+
+        var newLevel = $(this).attr("data-level");
+        var subsystem = $(this).closest(".subsystem").attr("data-subsystem");
+        var nodeId = $(this).closest(".subsystem").attr("data-node-id");
+
+        var link = $(this);
+        var dropdown = $(this).closest("ul.dropdown-menu");
+
+        $.ajax({
+            url: '/system/logging/node/' + encodeURIComponent(nodeId) + '/subsystem/' + encodeURIComponent(subsystem) + '/' + encodeURIComponent(newLevel) + '',
+            type: "PUT",
+            success: function(data) {
+                $("li", dropdown).removeClass("active");
+                link.closest("li").addClass("active");
+                $(".dropdown-toggle .loglevel-title", link.closest(".subsystem")).text(newLevel.capitalize());
+                showSuccess("Log level of subsystem changed.");
+            },
+            error: function() {
+                showError("Could not change log level of subsystem.");
+            }
+        });
     });
 
     // Show configured stream rules in streams list.
@@ -331,13 +349,6 @@ $(document).ready(function() {
             $(".icon", this).addClass("icon-caret-up");
             $("span", this).text("Hide rules");
         }
-    });
-
-    // Check all fine-grained node log level checkboxes.
-    $(".fine-log-level-controls .select-all").on("click", function() {
-        var checkboxes = $(".fine-log-level-controls[data-node-id='" + $(this).attr("data-node-id") + "'] input[type=checkbox]");
-        // The checkbox is already changed when this event is fired so we do not need to invert the condition.
-        checkboxes.prop("checked", checkboxes.prop("checked"));
     });
 
     // Create a search on the fly.
@@ -520,9 +531,9 @@ $(document).ready(function() {
 		x = "<span class='alert alert-error sidebar-alert'><i class='icon-warning-sign'></i> " + message + "</span>"
 		$("#sidebar-inner").html(x);
 	}
-	
+
 	function addParameterToCurrentUrl(key, value) {
-	    key = escape(key); 
+	    key = escape(key);
 	    value = escape(value);
 
 	    var kvp = document.location.search.substr(1).split('&');
@@ -543,7 +554,7 @@ $(document).ready(function() {
 	    	kvp[kvp.length] = [key,value].join('=');
 	    }
 
-	    return kvp.join('&'); 
+	    return kvp.join('&');
 	}
 
     function sizeSidebar() {
@@ -649,6 +660,10 @@ function showSuccess(message) {
 String.prototype.splice = function( idx, rem, s ) {
     return (this.slice(0,idx) + s + this.slice(idx + Math.abs(rem)));
 };
+
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
 
 function htmlEscape(x) {
     return $('<div/>').text(x).html();

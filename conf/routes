@@ -62,6 +62,11 @@ GET         /system/indices/:index/close                                        
 GET         /system/indices/:index/reopen                                            @controllers.IndicesController.reopenIndex(index: String)
 GET         /system/indices/:index/delete                                            @controllers.IndicesController.deleteIndex(index: String)
 
+# Saved searches
+GET         /savedsearches                                                           @controllers.api.SavedSearchesApiController.list()
+GET         /savedsearches/:search_id/execute                                        @controllers.api.SavedSearchesApiController.execute(search_id: String)
+POST        /savedsearches/create                                                    @controllers.api.SavedSearchesApiController.create()
+
 # Extractors
 GET         /system/inputs/:node_id/:input_id/extractors                             @controllers.ExtractorsController.manage(node_id: String, input_id: String)
 GET         /system/inputs/:node_id/:input_id/extractors/new                         @controllers.ExtractorsController.newExtractor(node_id: String, input_id: String, extractor_type ?= "", field ?= "", example ?= "")
@@ -90,6 +95,7 @@ POST        /systemjobs/trigger                                                 
 
 # Logging
 GET         /system/logging                                                          @controllers.LoggingController.index()
+PUT         /system/logging/node/:node_id/subsystem/:subsystem/:level                @controllers.LoggingController.setSubsystemLevel(node_id: String, subsystem: String, level: String)
 
 # Dashboards
 GET         /dashboards                                                              @controllers.DashboardsController.index()
@@ -122,6 +128,8 @@ PUT         /a/system/processing/pause                                          
 PUT         /a/system/processing/resume                                              @controllers.api.SystemApiController.resumeMessageProcessing()
 GET         /a/system/node/:node_id/heap                                             @controllers.api.SystemApiController.heap(node_id: String)
 GET         /a/system/radio/:radio_id/heap                                           @controllers.api.SystemApiController.radioHeap(radio_id: String)
+GET         /a/system/internallogs/:node_id                                          @controllers.api.SystemApiController.internalLogsOfNode(node_id: String)
+GET         /a/system/internallogs/:node_id/metrics                                  @controllers.api.SystemApiController.internalLogMetricsOfNode(node_id: String)
 
 # API: Inputs
 GET         /a/system/inputs/:node_id/:input_id/recent_message                       @controllers.api.InputsApiController.recentMessage(node_id: String, input_id: String)
@@ -153,3 +161,5 @@ POST        /a/streams/:stream_id/testMatch                                     
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                                                            controllers.Assets.at(path="/public", file)
+
+GET         /opensearch.xml                                                          controllers.OpenSearchController.index()
