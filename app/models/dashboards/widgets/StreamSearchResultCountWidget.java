@@ -28,23 +28,25 @@ import java.util.Map;
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class SearchResultCountWidget extends DashboardWidget {
+public class StreamSearchResultCountWidget extends DashboardWidget {
 
     private static final int WIDTH = 1;
     private static final int HEIGHT = 1;
 
     private final String query;
     private final TimeRange timerange;
+    private final String streamId;
 
-    public SearchResultCountWidget(Dashboard dashboard, String query, TimeRange timerange) {
-        this(dashboard, null, null, 0, query, timerange, null);
+    public StreamSearchResultCountWidget(Dashboard dashboard, String query, TimeRange timerange, String streamId) {
+        this(dashboard, null, null, 0, query, timerange, streamId, null);
     }
 
-    public SearchResultCountWidget(Dashboard dashboard, String id, String description, int cacheTime, String query, TimeRange timerange, String creatorUserId) {
-        super(Type.SEARCH_RESULT_COUNT, id, description, cacheTime, dashboard, creatorUserId);
+    public StreamSearchResultCountWidget(Dashboard dashboard, String id, String description, int cacheTime, String query, TimeRange timerange, String streamId, String creatorUserId) {
+        super(DashboardWidget.Type.STREAM_SEARCH_RESULT_COUNT, id, description, cacheTime, dashboard, creatorUserId);
 
         this.query = query;
         this.timerange = timerange;
+        this.streamId = streamId;
     }
 
     @Override
@@ -52,6 +54,7 @@ public class SearchResultCountWidget extends DashboardWidget {
         Map<String, Object> config = Maps.newHashMap();
         config.putAll(timerange.getQueryParams());
         config.put("query", query);
+        config.put("stream_id", streamId);
 
         return config;
     }
