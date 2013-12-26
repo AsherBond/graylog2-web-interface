@@ -22,6 +22,7 @@ package models.dashboards.widgets;
 import com.google.common.collect.Maps;
 import lib.timeranges.TimeRange;
 import models.dashboards.Dashboard;
+import play.mvc.Call;
 
 import java.util.Map;
 
@@ -36,8 +37,8 @@ public class SearchResultCountWidget extends DashboardWidget {
     private final String query;
     private final TimeRange timerange;
 
-    public SearchResultCountWidget(Dashboard dashboard, String query, TimeRange timerange) {
-        this(dashboard, null, null, 0, query, timerange, null);
+    public SearchResultCountWidget(Dashboard dashboard, String query, TimeRange timerange, String description) {
+        this(dashboard, null, description, 0, query, timerange, null);
     }
 
     public SearchResultCountWidget(Dashboard dashboard, String id, String description, int cacheTime, String query, TimeRange timerange, String creatorUserId) {
@@ -54,6 +55,11 @@ public class SearchResultCountWidget extends DashboardWidget {
         config.put("query", query);
 
         return config;
+    }
+
+    @Override
+    public Call replayRoute() {
+        return prepareNonStreamBoundReplayRoute(query, timerange);
     }
 
     @Override
