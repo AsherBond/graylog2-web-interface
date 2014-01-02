@@ -177,7 +177,7 @@ h4 {
 
 .messages {
 	font-size: 11px;
-	margin-top: 10px;
+	margin-top: 30px;
 	table-layout: fixed;
 	border-collapse: collapse;
 	width: 100%;
@@ -1103,8 +1103,25 @@ form #stream-rules {
     font-weight: bold;
 }
 
-.field-graph-container .graph-settings, .field-graph-container .pin  {
+.field-graph-container .graph-settings,
+.field-graph-container .pin,
+.field-graph-container .unpin {
     font-size: 12px;
+}
+
+.field-graph-container .pin {
+    position: relative;
+    top: 1px;
+}
+
+.field-graph-container .unpin {
+    position: relative;
+    top: 1px;
+    left: -7px;
+}
+
+.field-graph-container .unpin .icon-stack-base {
+    font-size: 18px;
 }
 
 .field-graph-container .graph-settings a:hover {
@@ -1117,7 +1134,7 @@ form #stream-rules {
 }
 
 #field-graphs .spinner {
-    margin-top: 30px;
+    margin-top: 60px;
     text-align: center;
 }
 
@@ -1602,4 +1619,8 @@ form.edit-dashboard-form {
     font-size: 70px;
     position: relative;
     top: -10px;
+}
+
+.no-widgets {
+    margin-top: 15px;
 }

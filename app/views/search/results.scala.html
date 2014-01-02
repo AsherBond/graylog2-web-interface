@@ -59,6 +59,10 @@
         </ul>
     </div>
 
+    <a href="#" class="btn btn-small clear-pinned-charts" title="Reset/clear all pinned charts." style="display: none;">
+        Clear pinned charts
+    </a>
+
     @if(savedSearch != null) {
         <a href="@routes.SavedSearchesController.delete(savedSearch.getId)" class="btn btn-small btn-danger" data-confirm='Really delete saved search "@savedSearch.getTitle"?'>Delete saved search</a>
     }
@@ -151,6 +155,13 @@
     drawResultGraph();
 </script>
 
+<div class="graph-resolution-selector">
+    <i class="icon-time"></i>
+    <strong>Resolution:</strong> @Html(DateHistogramResolutionSelector.getOptions(histogram.getInterval()))
+</div>
+
+<hr style="margin-bottom: -20px;" />
+
 <div id="field-graphs">
     @****** field graph template. this is copied, filled and appended for every new field graph. ****@
     <div id="field-graph-template" class="field-graph-container" style="display: none;">
@@ -237,13 +248,19 @@
             </div>
 
             <a href="#" class="pin"><i class="icon icon-pushpin" title="Pin"></i></a>
+            <a href="#" class="unpin" style="display: none;">
+                <span class="icon-stack">
+                    <i class="icon-pushpin"></i>
+                    <i class="icon-ban-circle icon-stack-base text-error"></i>
+                </span>
+            </a>
         </h3>
 
         <div class='field-graph'>
         </div>
     </div>
 
-    <div class="spinner" style="display: none;">
+    <div class="spinner" style="display: none; height: 200px;">
         <i class="icon-spin icon-refresh icon-3x spinner"></i>
     </div>
 </div>
@@ -258,11 +275,6 @@
             $("#query-text").text(JSON.stringify(@Html(searchResult.getBuiltQuery()), null, 4));
         </script>
     </div>
-</div>
-
-<div class="graph-resolution-selector">
-    <i class="icon-time"></i>
-    <strong>Resolution:</strong> @Html(DateHistogramResolutionSelector.getOptions(histogram.getInterval()))
 </div>
 
 <table class="table table-condensed table-hover table-striped messages">
