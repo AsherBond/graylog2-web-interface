@@ -11,21 +11,17 @@ $(document).ready(function() {
         e.preventDefault();
 
         opts = {}
-
+        opts.field = $(this).parent().parent().parent().attr("data-field");
         var container = $(this).closest(".analyze-field");
         if (!!container.attr("data-stream-id")) {
-            opts["streamid"] = container.attr("data-stream-id");
+            opts.streamid = container.attr("data-stream-id");
         }
 
-        renderFieldChart($(this).parent().parent().parent().attr("data-field"), opts);
-
-        $(this).closest("li").addClass("disabled");
+        renderFieldChart(opts);
     });
 
-    function renderFieldChart(field, opts) {
-        if (opts == undefined) {
-            opts = {};
-        }
+    function renderFieldChart(opts) {
+        var field = opts.field;
 
         // Options.
         if (opts.chartid == undefined) {
@@ -56,28 +52,53 @@ $(document).ready(function() {
             opts.pinned = false;
         }
 
-        var rangeType = $("#universalsearch-rangetype-permanent").text().trim();
-        var query = $("#universalsearch-query-permanent").text().trim();
+        if (opts.query == undefined) {
+            opts.query = $("#universalsearch-query-permanent").text().trim();
+        }
+
+        if (opts.rangetype == undefined) {
+            opts.rangetype = $("#universalsearch-rangetype-permanent").text().trim();
+        }
+
+        if (opts.range == undefined) {
+            opts.range = {};
+        }
 
         var params = {
-            "rangetype": rangeType,
-            "q": query,
+            "rangetype": opts.rangetype,
+            "q": opts.query,
             "field": field,
             "interval": opts.interval,
             "valueType": opts.valuetype,
             "streamId": opts.streamid
         }
 
-        switch(rangeType) {
+        switch(opts.rangetype) {
             case "relative":
-                params["relative"] = $("#universalsearch-relative-permanent").text();
+                if (opts.range.relative == undefined) {
+                    opts.range.relative = $("#universalsearch-relative-permanent").text();
+                }
+
+                params["relative"] = opts.range.relative;
                 break;
             case "absolute":
-                params["from"] = $("#universalsearch-from-permanent").text();
-                params["to"] = $("#universalsearch-to-permanent").text();
+                if (opts.range.from == undefined) {
+                    opts.range.from = $("#universalsearch-from-permanent").text();
+                }
+
+                if (opts.range.to == undefined) {
+                    opts.range.to = $("#universalsearch-to-permanent").text();
+                }
+
+                params["from"] = opts.range.from;
+                params["to"] = opts.range.to;
                 break;
             case "keyword":
-                params["keyword"] = $("#universalsearch-keyword-permanent").text();
+                if (opts.range.keyword == undefined) {
+                    opts.range.keyword = $("#universalsearch-keyword-permanent").text();
+                }
+
+                params["keyword"] = opts.range.keyword;
                 break;
         }
 
@@ -86,13 +107,12 @@ $(document).ready(function() {
         /*
          * TODO:
          *   - export to image, ...
-         *   - persist in localstorage?
          *   - overflowing select box
          *   - add multiple lines?
          */
 
-        // Delete a possibly already existing graph of this value.
-        $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs")).remove();
+        // Delete a possibly already existing graph with this id. (for updates)
+        $('.field-graph-container[data-chart-id="' + opts.chartid + '"]', $("#field-graphs")).remove();
 
         $.ajax({
             url: '/a/search/fieldhistogram',
@@ -100,18 +120,21 @@ $(document).ready(function() {
             success: function(data) {
                 var template = $("#field-graph-template").clone();
                 template.removeAttr("id");
+                template.attr("data-chart-id", opts.chartid)
                 template.attr("data-field", field);
                 template.css("display", "block");
-                $("h3 .title", template).text(field);
+                $("h3 .title span", template).text(field);
                 $("ul", template).attr("data-field", field);
 
-                template.attr("data-chart-id", opts.chartid);
-                template.attr("data-config-interval", opts.interval);
-                template.attr("data-config-interpolation", opts.interpolation);
-                template.attr("data-config-renderer", opts.renderer);
-                template.attr("data-config-valuetype", opts.valuetype);
-                template.attr("data-config-streamid", opts.streamid);
-                template.attr("data-config-pinned", opts.pinned);
+                if (opts.query.trim().length > 0) {
+                    $(".field-graph-query", template).text(opts.query);
+                } else {
+                    $(".field-graph-query", template).text("*");
+                }
+
+                var lines = [];
+                lines.push(JSON.stringify(opts));
+                template.attr("data-lines", lines);
 
                 $(".type-description", template).text("(" + opts.valuetype + ")");
 
@@ -123,7 +146,7 @@ $(document).ready(function() {
                 // Place the chart after all others but before the spinner.
                 $("#field-graphs .spinner").before(template);
 
-                var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
+                var graphContainer = $('.field-graph-container[data-chart-id="' + opts.chartid + '"]', $("#field-graphs"));
                 var graphElem = $('.field-graph', graphContainer);
 
                 var graph = new Rickshaw.Graph( {
@@ -174,19 +197,19 @@ $(document).ready(function() {
                 graph.render();
 
                 // Highlight menu items.
-                $(".field-graph-container ul.interval-selector li a").removeClass("selected");
-                $('.field-graph-container ul.interval-selector li a[data-type="' + opts.interval + '"]').addClass("selected");
+                $("ul.interval-selector li a", graphContainer).removeClass("selected");
+                $('ul.interval-selector li a[data-type="' + opts.interval + '"]', graphContainer).addClass("selected");
 
-                $(".field-graph-container ul.interpolation-selector li a").removeClass("selected");
-                $('.field-graph-container ul.interpolation-selector li a[data-type="' + opts.interpolation + '"]').addClass("selected");
+                $("ul.interpolation-selector li a", graphContainer).removeClass("selected");
+                $('ul.interpolation-selector li a[data-type="' + opts.interpolation + '"]', graphContainer).addClass("selected");
 
-                $(".field-graph-container ul.type-selector li a").removeClass("selected");
-                $('.field-graph-container ul.type-selector li a[data-type="' + opts.renderer + '"]').addClass("selected");
+                $("ul.type-selector li a", graphContainer).removeClass("selected");
+                $('ul.type-selector li a[data-type="' + opts.renderer + '"]', graphContainer).addClass("selected");
 
-                $(".field-graph-container ul.valuetype-selector li a").removeClass("selected");
-                $('.field-graph-container ul.valuetype-selector li a[data-type="' + opts.valuetype + '"]').addClass("selected");
+                $("ul.valuetype-selector li a", graphContainer).removeClass("selected");
+                $('ul.valuetype-selector li a[data-type="' + opts.valuetype + '"]', graphContainer).addClass("selected");
 
-                fieldGraphs[field] = graph;
+                fieldGraphs[opts.chartid] = graph;
 
                 // Is this chart pinned? We need to update it's settings then.
                 var pinned = getPinnedCharts();
@@ -214,9 +237,13 @@ $(document).ready(function() {
         e.preventDefault();
 
         var field = $(this).closest("ul").attr("data-field");
-
-        var graph = fieldGraphs[field];
         var type = $(this).attr("data-type");
+
+        var graphContainer = $(this).closest(".field-graph-container");
+        var graphOpts = chartOptionsFromContainer(graphContainer);
+        changeGraphConfig(graphContainer, "renderer", type);
+
+        var graph = fieldGraphs[graphOpts.chartid];
         graph.setRenderer(type);
 
         if (type == "scatterplot") {
@@ -229,12 +256,9 @@ $(document).ready(function() {
 
         graph.render();
 
-        var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
-        graphContainer.attr("data-config-renderer", type);
-
         // Is this chart pinned? We need to update it's settings then.
         var pinned = getPinnedCharts();
-        var chartId = graphContainer.attr("data-chart-id");
+        var chartId = graphOpts.chartid;
         if (pinned[chartId] != undefined) {
             pinned[chartId] = chartOptionsFromContainer(graphContainer);
             setPinnedCharts(pinned);
@@ -251,16 +275,17 @@ $(document).ready(function() {
         var field = $(this).closest("ul").attr("data-field");
         var interpolation = $(this).text();
 
-        var graph = fieldGraphs[field];
+        var graphContainer = $(this).closest(".field-graph-container");
+        var graphOpts = chartOptionsFromContainer(graphContainer);
+        changeGraphConfig(graphContainer, "interpolation", interpolation);
+
+        var graph = fieldGraphs[graphOpts.chartid];
         graph.interpolation = interpolation;
         graph.render();
 
-        var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
-        graphContainer.attr("data-config-interpolation", interpolation);
-
         // Is this chart pinned? We need to update it's settings then.
         var pinned = getPinnedCharts();
-        var chartId = graphContainer.attr("data-chart-id");
+        var chartId = graphOpts.chartid;
         if (pinned[chartId] != undefined) {
             pinned[chartId] = chartOptionsFromContainer(graphContainer);
             setPinnedCharts(pinned);
@@ -274,15 +299,15 @@ $(document).ready(function() {
     $(".field-graph-container ul.interval-selector li a").live("click", function(e) {
         e.preventDefault();
         var field = $(this).closest("ul").attr("data-field");
-        var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
+        var graphContainer = $(this).closest(".field-graph-container");
 
         var interval = $(this).attr("data-type");
         var opts = chartOptionsFromContainer(graphContainer);
         opts.interval = interval;
+        opts.field = field;
 
-        renderFieldChart(field, opts);
-
-        graphContainer.attr("data-config-interval", interval);
+        renderFieldChart(opts);
+        changeGraphConfig(graphContainer, "interval", interval);
 
         $("a", $(this).closest("ul")).removeClass("selected");
         $(this).addClass("selected");
@@ -292,15 +317,15 @@ $(document).ready(function() {
     $(".field-graph-container ul.valuetype-selector li a").live("click", function(e) {
         e.preventDefault();
         var field = $(this).closest("ul").attr("data-field");
-        var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
+        var graphContainer = $(this).closest(".field-graph-container");
 
         var valuetype = $(this).attr("data-type");
         var opts = chartOptionsFromContainer(graphContainer);
         opts.valuetype = valuetype;
+        opts.field = field;
 
-        renderFieldChart(field, opts);
-
-        graphContainer.attr("data-config-valuetype", valuetype);
+        renderFieldChart(opts);
+        changeGraphConfig(graphContainer, "valuetype", valuetype);
 
         $("a", $(this).closest("ul")).removeClass("selected");
         $(this).addClass("selected");
@@ -310,28 +335,27 @@ $(document).ready(function() {
     $(".field-graph-container li a.hide").live("click", function(e) {
         e.preventDefault();
         var field = $(this).closest("ul").attr("data-field");
-        var graphContainer = $('.field-graph-container[data-field="' + field + '"]', $("#field-graphs"));
+        var graphContainer = $(this).closest(".field-graph-container");
+        var graphOpts = chartOptionsFromContainer(graphContainer);
 
-        unpinChart(graphContainer.attr("data-chart-id"));
+        unpinChart(graphOpts.chartid);
 
         graphContainer.remove();
-        delete fieldGraphs[field];
-
-
-        // Enable chart generator link so we can generate this chart from again later.
-        $("a.line-chart", $('div.generate-graph[data-field="' + field + '"]')).closest("li").removeClass("disabled");
+        delete fieldGraphs[graphOpts.chartid];
     });
 
     function chartOptionsFromContainer(cc) {
-        return {
-            field: cc.attr("data-field"),
-            chartid: cc.attr("data-chart-id"),
-            interval: cc.attr("data-config-interval"),
-            renderer: cc.attr("data-config-renderer"),
-            interpolation: cc.attr("data-config-interpolation"),
-            streamid: cc.attr("data-config-streamid"),
-            valuetype: cc.attr("data-config-valuetype")
-        }
+        return JSON.parse(cc.attr("data-lines"));
+    }
+
+    function changeGraphConfig(graphContainer, key, value) {
+        var opts = chartOptionsFromContainer(graphContainer);
+        opts[key] = value;
+
+        console.log("settings data-lines to");
+        console.log(opts);
+
+        graphContainer.attr("data-lines", JSON.stringify(opts));
     }
 
     $(".field-graph-container .pin").live("click", function(e) {
@@ -358,9 +382,10 @@ $(document).ready(function() {
     $(".field-graph-container .unpin").live("click", function(e) {
         e.preventDefault();
         var graphElem = $(this).closest(".field-graph-container");
-        graphElem.attr("data-config-pinned", "false");
+        var graphOpts = chartOptionsFromContainer(graphElem);
 
-        unpinChart(graphElem.attr("data-chart-id"));
+        changeGraphConfig(graphElem, "pinned", false);
+        unpinChart(graphOpts.chartid);
 
         // Mark as unpinned.
         $(this).hide();
@@ -395,10 +420,7 @@ $(document).ready(function() {
                     var chart = charts[id];
                     chart.pinned = true;
 
-                    renderFieldChart(chart.field, chart);
-
-                    // Disable chart generator link so we can't generate this chart from scratch again (until unpinned).
-                    $("a.line-chart", $('div.generate-graph[data-field="' + chart.field + '"]')).closest("li").addClass("disabled");
+                    renderFieldChart(chart);
                 }
             }
         }

@@ -167,7 +167,7 @@
     <div id="field-graph-template" class="field-graph-container" style="display: none;">
         <h3>
             <i class="icon icon-ellipsis-vertical"></i>
-            <span class="title"></span>
+            <span class="title">Field: <span></span></span>
             <span class="type-description"></span>
 
             <div class="btn-group graph-settings">
@@ -242,19 +242,18 @@
                         </ul>
                     </li>
 
-
                     <li><a href="#" class="hide">Hide</a></li>
                 </ul>
             </div>
 
             <a href="#" class="pin"><i class="icon icon-pushpin" title="Pin"></i></a>
-            <a href="#" class="unpin" style="display: none;">
-                <span class="icon-stack">
-                    <i class="icon-pushpin"></i>
-                    <i class="icon-ban-circle icon-stack-base text-error"></i>
-                </span>
-            </a>
+            <a href="#" class="unpin" style="display: none;"><i class="icon-pushpin"></i></a>
         </h3>
+
+        <div class="field-graph-query-container">
+            Query:
+            <span class="field-graph-query"></span>
+        </div>
 
         <div class='field-graph'>
         </div>

@@ -1109,19 +1109,15 @@ form #stream-rules {
     font-size: 12px;
 }
 
-.field-graph-container .pin {
-    position: relative;
-    top: 1px;
-}
-
+.field-graph-container .pin,
 .field-graph-container .unpin {
     position: relative;
     top: 1px;
-    left: -7px;
 }
 
-.field-graph-container .unpin .icon-stack-base {
-    font-size: 18px;
+
+.field-graph-container .unpin {
+    color: #b94a48;
 }
 
 .field-graph-container .graph-settings a:hover {
@@ -1661,4 +1657,14 @@ form.edit-dashboard-form {
 
 .dynatable-pagination-links li:first-child {
     display: none;
+}
+
+.field-graph-query-container {
+    position: relative;
+    top: -5px;
+}
+
+.field-graph-query {
+    font-family: monospace;
+    color: #9da096;
 }
