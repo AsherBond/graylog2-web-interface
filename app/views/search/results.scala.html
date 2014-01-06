@@ -127,13 +127,17 @@
 
         new Rickshaw.Graph.Axis.Y( {
             graph: resultGraph,
-            tickFormat: Rickshaw.Fixtures.Number.formatKMBT
+            tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+            pixelsPerTick: 30
         });
 
-        new Rickshaw.Graph.Axis.Time({
-            graph: resultGraph,
-            ticksTreatment: "glow"
-        });
+        // Only show a x-axis (time) when there is more than one bucked.
+        if(resultGraph.series != undefined && resultGraph.series[0] != undefined && resultGraph.series[0].data.length > 1) {
+            new Rickshaw.Graph.Axis.Time({
+                graph: resultGraph,
+                ticksTreatment: "glow"
+            });
+        }
 
         new Rickshaw.Graph.HoverDetail({
             graph: resultGraph,
@@ -165,6 +169,8 @@
 <div id="field-graphs">
     @****** field graph template. this is copied, filled and appended for every new field graph. ****@
     <div id="field-graph-template" class="field-graph-container" style="display: none;">
+        <i class="icon icon-reorder pull-right reposition-handle"></i>
+
         <h3>
             <i class="icon icon-ellipsis-vertical"></i>
             <span class="title">Field: <span></span></span>
@@ -255,7 +261,11 @@
             <span class="field-graph-query"></span>
         </div>
 
-        <div class='field-graph'>
+        <div class="field-graph">
+        </div>
+
+        <div class="merge-hint">
+            <span class="alpha70">Drop to merge charts</span>
         </div>
     </div>
 

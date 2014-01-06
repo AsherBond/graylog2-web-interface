@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    var palette = new Rickshaw.Color.Palette({ scheme: 'colorwheel' });
 
     $(".analyze-field .generate-graph .pie-chart").on("click", function(e) {
         e.preventDefault();
@@ -108,7 +109,6 @@ $(document).ready(function() {
          * TODO:
          *   - export to image, ...
          *   - overflowing select box
-         *   - add multiple lines?
          */
 
         // Delete a possibly already existing graph with this id. (for updates)
@@ -164,7 +164,8 @@ $(document).ready(function() {
 
                 new Rickshaw.Graph.Axis.Y( {
                     graph: graph,
-                    tickFormat: Rickshaw.Fixtures.Number.formatKMBT
+                    tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+                    pixelsPerTick: 30
                 });
 
                 new Rickshaw.Graph.Axis.Time({
@@ -176,7 +177,6 @@ $(document).ready(function() {
                     graph: graph,
                     formatter: function(series, x, y) {
                         var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
-                        var swatch = '<span class="detail_swatch"></span>';
                         var content = '[' + opts.valuetype + '] ' + field + ': ' + parseInt(y) + '<br>' + date;
                         return content;
                     }
@@ -217,6 +217,51 @@ $(document).ready(function() {
                     pinned[opts.chartid] = opts;
                     setPinnedCharts(pinned);
                 }
+
+                // Make it draggable.
+                graphContainer.draggable({
+                    handle: ".reposition-handle",
+                    cursor: "move",
+                    scope: "#field-graphs",
+                    revert: "invalid", // return to position when not dropped on a droppable.
+                    opacity: 0.5,
+                    containment: $("#field-graphs"),
+                    axis: "y",
+                    snap: $(".field-graph-container"),
+                    snapMode: "inner"
+                });
+
+                // ...and droppable.
+                graphContainer.droppable({
+                    scope: "#field-graphs",
+                    tolerance: "intersect",
+                    activate: function(event, ui) {
+                        // Show merge hints on all charts except the dragged one when dragging starts.
+                        $("#field-graphs .merge-hint").not($(".merge-hint", ui.draggable)).show();
+                    },
+                    deactivate: function() {
+                        // Hide all merge hints when dragging stops.
+                        $("#field-graphs .merge-hint").hide();
+                    },
+                    over: function() {
+                        $(this).css("background-color", "#C7E2ED");
+                        $(".merge-hint span", $(this)).switchClass("alpha80", "merge-drop-ready");
+                    },
+                    out: function() {
+                        $(this).css("background-color", "#fff");
+                        $(".merge-hint span", $(this)).switchClass("merge-drop-ready", "alpha80");
+                    },
+                    drop: function(event, ui) {
+                        // Merge charts.
+                        var target = $(this).attr("data-chart-id");
+                        var dragged = ui.draggable.attr("data-chart-id");
+
+                        ui.draggable.hide();
+                        $(this).css("background-color", "#fff");
+
+                        mergeCharts(target, dragged);
+                    }
+                });
             },
             error: function(data) {
                 if(data.status != 400) {
@@ -224,7 +269,7 @@ $(document).ready(function() {
                 }
             },
             statusCode: { 400: function() {
-                alert("Line charts are only available for numeric field types.");
+                showError("Line charts are only available for numeric field types.");
             }},
             complete: function() {
                 $("#field-graphs .spinner").hide();
@@ -352,9 +397,6 @@ $(document).ready(function() {
         var opts = chartOptionsFromContainer(graphContainer);
         opts[key] = value;
 
-        console.log("settings data-lines to");
-        console.log(opts);
-
         graphContainer.attr("data-lines", JSON.stringify(opts));
     }
 
@@ -404,6 +446,32 @@ $(document).ready(function() {
         $(this).hide();
         showSuccess("All charts have been unpinned.")
     });
+
+    function mergeCharts(targetId, draggedId) {
+        var targetChart = fieldGraphs[targetId];
+        var draggedChart = fieldGraphs[draggedId];
+
+        var targetElem = $('.field-graph-container[data-chart-id="' + targetId + '"]');
+
+        // Update title and description.
+        $(".type-description", targetElem).hide();
+        $(".title", targetElem).text("Combined chart");
+
+        // TODO support multiple
+        // TODO chart title for legend
+        var addSeries = {
+            name: "value2",
+            color: palette.color()
+        };
+
+        addSeries["data"] = draggedChart.series[0].data;
+
+        var targetSeries = targetChart.series;
+        targetSeries.push(addSeries);
+
+        // Reflect all the chart changes we made.
+        targetChart.update();
+    }
 
     // Load all pinned charts
     (function() {
