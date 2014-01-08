@@ -329,14 +329,7 @@ class ApiClientImpl implements ApiClient {
                 target = radio;
             }
 
-            if (!unauthenticated && sessionId == null) {
-                final User user = UserService.current();
-                if (user != null) {
-                    session(user.getSessionId());
-                } else {
-                    log.warn("You did not add unauthenticated() nor session() but also don't have a current user. You probably meant unauthenticated(). This is a bug!", new Throwable());
-                }
-            }
+            ensureAuthentication();
             final URL url = prepareUrl(target);
             final AsyncHttpClient.BoundRequestBuilder requestBuilder = requestBuilderForUrl(url);
             requestBuilder.addHeader(Http.HeaderNames.ACCEPT, mediaType.toString());
@@ -377,7 +370,8 @@ class ApiClientImpl implements ApiClient {
                     return responseClass.cast(response.getResponseBody("UTF-8"));
                 }
 
-                if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                if (expectedResponseCodes.contains(response.getStatusCode())
+                        || (response.getStatusCode() >= 200 && response.getStatusCode() < 300)) {
                     T result;
                     try {
                         if (responseContentType.is(MediaType.JSON_UTF_8.withoutParameters())) {
@@ -420,8 +414,18 @@ class ApiClientImpl implements ApiClient {
                 log.warn("Timed out requesting {}", request);
                 target.markFailure();
             }
-            // TODO should this throw an exception instead?
-            return null;
+            throw new APIException(request, new IllegalStateException("Unhandled error condition in API client"));
+        }
+
+        private void ensureAuthentication() {
+            if (!unauthenticated && sessionId == null) {
+                final User user = UserService.current();
+                if (user != null) {
+                    session(user.getSessionId());
+                } else {
+                    log.warn("You did not add unauthenticated() nor session() but also don't have a current user. You probably meant unauthenticated(). This is a bug!", new Throwable());
+                }
+            }
         }
 
         @Override
@@ -433,6 +437,8 @@ class ApiClientImpl implements ApiClient {
 
             Collection<F.Tuple<ListenableFuture<Response>, Node>> requests = Lists.newArrayList();
             final Collection<Response> responses = Lists.newArrayList();
+
+            ensureAuthentication();
             for (Node currentNode : nodes) {
                 final URL url = prepareUrl(currentNode);
                 try {
@@ -462,20 +468,19 @@ class ApiClientImpl implements ApiClient {
                     node.touch();
                     results.put(node, deserializeJson(response, responseClass));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    log.error("API call Interrupted", e);
                     node.markFailure();
                 } catch (ExecutionException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    log.error("API call failed to execute.", e);
                     node.markFailure();
                 } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    log.error("API failed due to IO error", e);
                     node.markFailure();
                 } catch (TimeoutException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    log.error("API call timed out", e);
                     node.markFailure();
                 }
             }
-
 
             return results;
         }

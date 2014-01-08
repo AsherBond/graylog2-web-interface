@@ -178,7 +178,7 @@ $(document).ready(function() {
 
                     // Call everything again in 2.5sec
                     setTimeout(function() {
-                        showQuickValues(field, container, false, direction, true);
+                        showQuickValues(field, container, false, calculateDirection(button), true);
                     }, 3000)
                 }
             }
@@ -202,7 +202,7 @@ $(document).ready(function() {
     }
 
     function calculateDirection(linkel) {
-        if (($(window).height() - linkel.offset().top) < 400) {
+        if (($(window).height() - linkel.offset().top + $(window).scrollTop()) < 400) {
             return "up";
         } else {
             return "down";
@@ -212,24 +212,29 @@ $(document).ready(function() {
     // Update all the positions, all the time.
     // Updating total event counts;
     (function updateAllPositions() {
-        $(".quickvalues").each(function(i) {
+        $(".quickvalues:visible").each(function(i) {
             var button = $(".analyze-field .show-quickvalues[data-field=" + $(this).attr("data-field") + "]");
-            updatePosition(button, $(this), calculateDirection(button));
+            var direction = calculateDirection(button);
+
+            updatePosition(button, $(this), direction);
         });
 
-        setTimeout(updateAllPositions, 25);
+        setTimeout(updateAllPositions, 500);
     })();
 
     function updatePosition(button, quickvalues, direction) {
-
         var left = button.offset().left-$(window).scrollLeft()-622;
 
         switch(direction)  {
             case "up":
                 var top = button.offset().top-$(window).scrollTop()-390;
+                quickvalues.removeClass("quickvalues-down");
+                quickvalues.addClass("quickvalues-up");
                 break;
             case "down":
                 var top = button.offset().top-$(window).scrollTop()-20;
+                quickvalues.removeClass("quickvalues-up");
+                quickvalues.addClass("quickvalues-down");
                 break;
         }
 

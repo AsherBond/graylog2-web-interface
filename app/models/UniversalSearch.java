@@ -29,7 +29,6 @@ import lib.timeranges.TimeRange;
 import models.api.responses.*;
 import models.api.results.DateHistogramResult;
 import models.api.results.SearchResult;
-import play.Logger;
 import play.mvc.Call;
 import play.mvc.Http.Request;
 
@@ -42,11 +41,14 @@ public class UniversalSearch {
     public static final int PER_PAGE = 100;
     public static final int KEITH = 61;  // http://en.wikipedia.org/wiki/61_(number) -> Keith
 
+    public static final SearchSort DEFAULT_SORT = new SearchSort("timestamp", SearchSort.Direction.DESC);
+
     private final ApiClient api;
     private final String query;
     private final String filter;
     private final TimeRange timeRange;
     private final Integer page;
+    private final SearchSort order;
 
     @AssistedInject
     private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted String query) {
@@ -54,17 +56,27 @@ public class UniversalSearch {
     }
 
     @AssistedInject
-    private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted String query, @Nullable @Assisted("filter") String filter) {
-        this(api, timeRange, query, 0, filter);
-    }
-
-    @AssistedInject
     private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted String query, @Assisted Integer page) {
-        this(api, timeRange, query, page, null);
+        this(api, timeRange, query, page, null, null);
     }
 
     @AssistedInject
-    private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted("query") String query, @Assisted Integer page, @Assisted("filter") String filter) {
+    private UniversalSearch(ApiClient api, @Assisted String query, @Assisted TimeRange timeRange, @Nullable @Assisted("filter") String filter) {
+        this(api, timeRange, query, 0, filter, null);
+    }
+
+    @AssistedInject
+    public UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted("query") String query, @Assisted Integer page, @Assisted("filter") String filter) {
+        this(api, timeRange, query, page, filter, null);
+    }
+
+    @AssistedInject
+    public UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted String query, @Assisted Integer page, @Assisted SearchSort order) {
+        this(api, timeRange, query, page, null, order);
+    }
+
+    @AssistedInject
+    private UniversalSearch(ApiClient api, @Assisted TimeRange timeRange, @Assisted("query") String query, @Assisted Integer page, @Assisted("filter") String filter, @Assisted SearchSort order) {
         this.filter = filter;
         this.api = api;
         this.query = query;
@@ -74,6 +86,12 @@ public class UniversalSearch {
             this.page = 0;
         } else {
             this.page = page - 1;
+        }
+
+        if (order == null) {
+            this.order = DEFAULT_SORT;
+        } else {
+            this.order = order;
         }
     }
 
@@ -85,8 +103,10 @@ public class UniversalSearch {
                 .queryParam("limit", pageSize)
                 .queryParam("offset", page * pageSize)
                 .queryParam("filter", (filter == null ? "*" : filter))
+                .queryParam("sort", order.toApiParam())
                 .accept(mediaType)
                 .timeout(KEITH, TimeUnit.SECONDS)
+                .expect(200, 400)
                 .execute();
     }
 
@@ -101,7 +121,8 @@ public class UniversalSearch {
                 response.time,
                 response.messages,
                 response.fields,
-                response.usedIndices
+                response.usedIndices,
+                response.error
         );
 
         return result;
@@ -158,23 +179,48 @@ public class UniversalSearch {
     }
 
     public Call getRoute(Request request, int page) {
+        return getRoute(request, page, order.getField(), order.getDirection().toString().toLowerCase());
+    }
+
+
+    public Call getRoute(Request request, int page, String sortField, String sortOrder) {
         int relative = Tools.intSearchParamOrEmpty(request, "relative");
         String from = Tools.stringSearchParamOrEmpty(request, "from");
         String to = Tools.stringSearchParamOrEmpty(request, "to");
         String keyword = Tools.stringSearchParamOrEmpty(request, "keyword");
         String interval = Tools.stringSearchParamOrEmpty(request, "interval");
 
-        return routes.SearchController.index(
-                query,
-                timeRange.getType().toString().toLowerCase(),
-                relative,
-                from,
-                to,
-                keyword,
-                interval,
-                page,
-                ""
-        );
+        // TODO we desperately need to pass the streamid and then build the filter here, instead of passing the filter and then trying to reassemble the streamid.
+        if (filter != null && filter.startsWith("streams:")) {
+            return routes.StreamSearchController.index(
+                    filter.split(":")[1],
+                    query,
+                    timeRange.getType().toString().toLowerCase(),
+                    relative,
+                    from,
+                    to,
+                    keyword,
+                    interval,
+                    page,
+                    "",
+                    sortField,
+                    sortOrder
+            );
+        } else {
+            return routes.SearchController.index(
+                    query,
+                    timeRange.getType().toString().toLowerCase(),
+                    relative,
+                    from,
+                    to,
+                    keyword,
+                    interval,
+                    page,
+                    "",
+                    sortField,
+                    sortOrder
+            );
+        }
     }
 
     public Call getCsvRoute(Request request) {
@@ -193,14 +239,20 @@ public class UniversalSearch {
         );
     }
 
+    public SearchSort getOrder() {
+        return order;
+    }
+
     public interface Factory {
         UniversalSearch queryWithRange(String query, TimeRange timeRange);
 
         UniversalSearch queryWithRangeAndFilter(String query, TimeRange timeRange, @Assisted("filter") String filter);
 
-        UniversalSearch queryWithRangeAndPage(String query, TimeRange timeRange, Integer page);
+        UniversalSearch queryWithRangePageAndOrder(String query, TimeRange timeRange, Integer page, SearchSort order);
 
         UniversalSearch queryWithFilterRangeAndPage(@Assisted("query") String query, @Assisted("filter") String filter, TimeRange timeRange, Integer page);
+
+        UniversalSearch queryWithFilterRangePageAndOrder(@Assisted("query") String query, @Assisted("filter") String filter, TimeRange timeRange, Integer page, SearchSort order);
     }
 
 }

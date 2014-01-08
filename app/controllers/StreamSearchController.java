@@ -4,14 +4,10 @@ import com.google.inject.Inject;
 import lib.APIException;
 import lib.ApiClient;
 import lib.SearchTools;
-import lib.Tools;
 import lib.timeranges.InvalidRangeParametersException;
-import lib.timeranges.TimeRange;
 import models.*;
 import models.api.results.DateHistogramResult;
 import models.api.results.SearchResult;
-import play.mvc.Call;
-import play.mvc.Http;
 import play.mvc.Result;
 
 import java.io.IOException;
@@ -23,7 +19,9 @@ public class StreamSearchController extends SearchController {
     @Inject
     private StreamService streamService;
 
-    public Result index(String streamId, String q, String rangeType, int relative, String from, String to, String keyword, String interval, int page, String savedSearchId) {
+    public Result index(String streamId, String q, String rangeType, int relative, String from, String to, String keyword, String interval, int page, String savedSearchId, String sortField, String sortOrder) {
+        SearchSort sort = buildSearchSort(sortField, sortOrder);
+
         Stream stream;
         try {
             stream = streamService.get(streamId);
@@ -38,7 +36,7 @@ public class StreamSearchController extends SearchController {
 
         UniversalSearch search;
         try {
-            search = getSearch(q, filter, rangeType, relative, from, to, keyword, page);
+            search = getSearch(q, filter, rangeType, relative, from, to, keyword, page, sort);
         } catch(InvalidRangeParametersException e2) {
             return status(400, views.html.errors.error.render("Invalid range parameters provided.", e2, request()));
         } catch(IllegalArgumentException e1) {
@@ -60,7 +58,11 @@ public class StreamSearchController extends SearchController {
                 interval = "minute";
             }
 
-            searchResult = FieldMapper.run(search.search());
+            searchResult = search.search();
+            if (searchResult.getError() != null) {
+                return ok(views.html.search.queryerror.render(currentUser(), q, searchResult, savedSearch, stream));
+            }
+            searchResult = FieldMapper.run(searchResult);
 
             searchResult.setAllFields(getAllFields());
 
@@ -78,4 +80,5 @@ public class StreamSearchController extends SearchController {
             return ok(views.html.search.noresults.render(currentUser(), q, searchResult, savedSearch, stream));
         }
     }
+
 }
