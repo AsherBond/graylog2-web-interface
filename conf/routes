@@ -11,7 +11,7 @@ GET         /logout                                                             
 GET         /disconnected                                                            @controllers.LonesomeInterfaceController.index()
 
 # Home page
-GET         /                                                                        @controllers.DashboardController.index()
+GET         /                                                                        @controllers.StartpageController.redirect()
 
 # Search
 GET         /search                                                                  @controllers.SearchController.index(q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", interval ?= "", page:Integer ?= 1, saved:String ?= "", sortField:String ?= "", sortOrder:String ?= "")
@@ -34,6 +34,8 @@ POST        /streams/:stream_id/rules/:streamrule_id                            
 GET         /streams/:stream_id/alerts                                               @controllers.StreamAlertsController.index(stream_id: String)
 GET         /streams/:stream_id/pause                                                @controllers.StreamsController.pause(stream_id: String)
 GET         /streams/:stream_id/resume                                               @controllers.StreamsController.resume(stream_id: String)
+GET         /streams/:stream_id/edit                                                 @controllers.StreamsController.edit(stream_id: String)
+POST        /streams/:stream_id/update                                               @controllers.StreamsController.update(stream_id: String)
 
 # System
 GET         /system                                                                  @controllers.SystemController.index(page:Integer ?= 1)
@@ -77,7 +79,6 @@ POST        /system/inputs/:node_id/:input_id/extractors/:extractor_id/delete   
 
 # Users
 GET         /system/users                                                            @controllers.UsersController.index()
-GET         /a/system/users/:username                                                @controllers.UsersController.isUniqueUsername(username: String)
 POST        /system/users                                                            @controllers.UsersController.create()
 POST        /system/users/delete/:username                                           @controllers.UsersController.delete(username: String)
 GET         /system/users/show/:username                                             @controllers.UsersController.show(username: String)
@@ -85,9 +86,13 @@ POST        /system/users/save/:username                                        
 GET         /system/users/new                                                        @controllers.UsersController.newUserForm()
 GET         /system/users/edit/:username                                             @controllers.UsersController.editUserForm(username: String)
 POST        /system/users/password/:username                                         @controllers.UsersController.changePassword(username: String)
+POST        /system/users/startpage/reset/:username                                  @controllers.StartpageController.reset(username: String)
 
-# Source
+# Sources
 GET         /sources                                                                 @controllers.SourcesController.list()
+
+# Startpages
+GET         /startpage/set                                                           @controllers.StartpageController.set(pageType ?= "", id ?= "")
 
 # LDAP configuration
 GET         /system/ldap                                                             @controllers.LdapController.index()
@@ -136,6 +141,7 @@ GET         /a/system/node/:node_id/heap                                        
 GET         /a/system/radio/:radio_id/heap                                           @controllers.api.SystemApiController.radioHeap(radio_id: String)
 GET         /a/system/internallogs/:node_id                                          @controllers.api.SystemApiController.internalLogsOfNode(node_id: String)
 GET         /a/system/internallogs/:node_id/metrics                                  @controllers.api.SystemApiController.internalLogMetricsOfNode(node_id: String)
+GET         /a/system/users/:username                                                @controllers.UsersController.isUniqueUsername(username: String)
 
 # API: Inputs
 GET         /a/system/inputs/:node_id/:input_id/recent_message                       @controllers.api.InputsApiController.recentMessage(node_id: String, input_id: String)

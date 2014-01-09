@@ -19,7 +19,7 @@
                 Created by @views.html.partials.links.to_user.render(stream.getCreatorUser)
                 <span class="moment-from-now" title="@stream.getCreatedAt()">@stream.getCreatedAt()</span>
 
-                <button class="btn btn-danger btn-mini remove-stream"
+                &nbsp;<button class="btn btn-danger btn-mini remove-stream"
                     type="submit"
                     data-removeUrl="@routes.StreamsController.delete(stream.getId)">
                         Delete
@@ -31,9 +31,10 @@
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a href="@routes.StreamsController.edit(stream.getId)">Edit stream</a></li>
                         <li><a href="@routes.StreamRulesController.index(stream.getId)">Edit rules</a></li>
-                        <li><a href="#" data-stream-id="@stream.getId" class="show-stream-rule">Quick add rule</a></li>
-                        <li class="disabled"><a href="#">Add alert (coming soon)</a></li>
+                        <li @if(stream.getStreamRules.isEmpty()) { class="disabled" } ><a href="#" data-stream-id="@stream.getId" class="show-stream-rule">Quick add rule</a></li>
+                        <li><a href="#">Manage alerts</a></li>
                         <li class="dropdown-submenu">
                             <a href="#">Show Metrics on</a>
                             <ul class="dropdown-menu valuetype-selector">
@@ -52,6 +53,7 @@
                         } else {
                             <li><a href="@routes.StreamsController.resume(stream.getId)">Resume this stream</a></li>
                         }
+                        <li><a href="@routes.StartpageController.set("stream", stream.getId)">Set as startpage</a></li>
                     </ul>
                 </div>
             </span>
@@ -65,11 +67,19 @@
                 @if(stream.getDisabled() == false) {
                     <span class="label label-success">Active</span>
                 } else {
-                    <span class="label label-warning">Paused</span>
+                    <span class="label label-important">Paused</span>
                 }
             </h3>
 
             <div class="stream-row-details">
+                <div class="stream-description">
+                    @if(stream.getDescription != null && !stream.getDescription.isEmpty) {
+                        <strong>Description:</strong> @stream.getDescription
+                    } else {
+                        No description set.
+                    }
+                </div>
+
                 <span class="throughput">
                     <span title="Coming soon!">
                         IO:

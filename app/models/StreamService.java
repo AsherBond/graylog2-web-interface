@@ -82,9 +82,12 @@ public class StreamService {
     }
 
     public String create(CreateStreamRequest request) throws APIException, IOException {
-        CreateStreamResponse csr = null;
-        csr = api.post(CreateStreamResponse.class).path("/streams").body(request).expect(Http.Status.CREATED).execute();
+        CreateStreamResponse csr = api.post(CreateStreamResponse.class).path("/streams").body(request).expect(Http.Status.CREATED).execute();
         return csr.streamId;
+    }
+
+    public void update(String streamId, CreateStreamRequest request) throws APIException, IOException {
+        api.put().path("/streams/{0}", streamId).body(request).expect(Http.Status.OK).execute();
     }
 
     public void delete(String streamId) throws APIException, IOException {
