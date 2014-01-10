@@ -17,27 +17,16 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.requests.alerts;
+package models.api.responses.alerts;
 
-import com.google.common.collect.Maps;
-import com.google.gson.annotations.SerializedName;
-import models.api.requests.ApiRequest;
-
-import java.util.Map;
+import java.util.List;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class CreateAlertConditionRequest extends ApiRequest {
+public class AlertConditionsResponse {
 
-    public String type;
-    public Map<String, Object> parameters;
-
-    @SerializedName("creator_user_id")
-    public String creatorUserId;
-
-    public CreateAlertConditionRequest() {
-        this.parameters = Maps.newHashMap();
-    }
+    public int total;
+    public List<AlertConditionSummaryResponse> conditions;
 
 }

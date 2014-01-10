@@ -1,4 +1,7 @@
-@(currentUser: User, stream: Stream)
+@(currentUser: User, stream: Stream, alertConditions: List[AlertCondition])
+
+@import lib.security.RestPermissions._
+@import views.helpers.Permissions._
 
 @main("Alerts", views.html.sidebars.standard(currentUser), "", currentUser) {
     <h1>
@@ -16,7 +19,7 @@
             <option value="field-value">Field value condition</option>
         </select>
 
-        <button class="btn btn-success add-alert">Configure new alert</button>
+        <button class="btn btn-success add-alert">Configure new alert</butto.parcreatcretypen>
     </div>
 
     <form action="@routes.AlertsController.addTypeMessageCount(stream.getId)" method="POST" class="alert-type-form alert-type-form-message-count" id="message-count">
@@ -48,9 +51,9 @@
             <span class="time-descr" data-plural="minutes" data-singular="minute">minutes</span>
 
             <br />
-            and wait at least
+            and then wait at least
             <input name="grace" type="text" class="input-mini validatable" data-validate="positive_number" />
-            minutes until triggering a new alert.
+            minutes until triggering a new alert. (grace period)
 
             <p style="margin-top: 10px;">
                 <button type="submit" class="btn btn-success">Add alert condition</button>
@@ -103,9 +106,9 @@
             <span class="time-descr" data-plural="minutes" data-singular="minute">minutes</span>
 
 
-            and <br /> wait at least
+            and <br /> then wait at least
             <input name="grace" type="text" class="input-mini" />
-            minutes until triggering a new alert.
+            minutes until triggering a new alert. (grace period)
 
 
             <p style="margin-top: 10px;">
@@ -117,6 +120,41 @@
 
     <hr />
 
-    <h2><i class="icon icon-tasks"></i> Triggered alerts</h2>
+    <h2 style="margin-bottom: 5px;"><i class="icon icon-tasks"></i> Configured alert conditions</h2>
+
+    @for(condition <- alertConditions) {
+        <div class="row-fluid node-row">
+            <span class="pull-right node-row-info">
+                Created by @views.html.partials.links.to_user.render(condition.getCreatorUser)
+                <span class="moment-from-now" title="@condition.getCreatedAt()">@condition.getCreatedAt()</span>
+
+                @if(isPermitted(STREAMS_EDIT, stream.getId)) {
+                    &nbsp;
+                    <form action="@routes.AlertsController.removeCondition(stream.getId, condition.getId)" method="POST" style="position: relative; top: -1px;">
+                        <button type="submit" class="btn btn-danger btn-mini" data-confirm="Really delete alarm condition?">Delete</button>
+                    </form>
+                }
+            </span>
+
+            <h3>
+                <i class="icon icon-ellipsis-vertical"></i>
+                @condition.getSummary
+            </h3>
+
+            <div class="alert-condition">
+                @condition.getDescription
+            </div>
+        </div>
+    }
+
+    @if(alertConditions.isEmpty) {
+        <div style="margin-top: 10px;" class="alert alert-info">
+            No configured alarm conditions.
+        </div>
+    }
+
+    <hr />
+
+    <h2><i class="icon icon-bell"></i> Triggered alerts</h2>
 
 }

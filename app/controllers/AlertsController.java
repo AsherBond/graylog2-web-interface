@@ -19,10 +19,10 @@
  */
 package controllers;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import lib.APIException;
 import lib.ApiClient;
+import models.AlertCondition;
 import models.AlertConditionService;
 import models.Stream;
 import models.StreamService;
@@ -30,6 +30,7 @@ import models.api.requests.alerts.CreateAlertConditionRequest;
 import play.mvc.Result;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,10 +41,15 @@ public class AlertsController extends AuthenticatedController {
     @Inject
     private StreamService streamService;
 
+    @Inject
+    private AlertConditionService alertConditionService;
+
     public Result index(String streamId) {
         try {
             Stream stream = streamService.get(streamId);
-            return ok(views.html.alerts.manage.render(currentUser(), stream));
+            List<AlertCondition> alertConditions = alertConditionService.allOfStream(stream);
+
+            return ok(views.html.alerts.manage.render(currentUser(), stream, alertConditions));
         } catch (IOException e) {
             return status(504, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
         } catch (APIException e) {
@@ -51,7 +57,6 @@ public class AlertsController extends AuthenticatedController {
             return status(504, views.html.errors.error.render(message, e, request()));
         }
     }
-
 
     public Result addTypeMessageCount(String streamId) {
         Map<String,String> form = flattenFormUrlEncoded(request().body().asFormUrlEncoded());
@@ -67,6 +72,7 @@ public class AlertsController extends AuthenticatedController {
             Stream stream = streamService.get(streamId);
 
             CreateAlertConditionRequest request = new CreateAlertConditionRequest();
+            request.creatorUserId = currentUser().getName();
             request.type = "message_count";
             request.parameters.put("grace", Integer.parseInt(form.get("grace")));
             request.parameters.put("time", Integer.parseInt(form.get("time")));
@@ -87,6 +93,21 @@ public class AlertsController extends AuthenticatedController {
 
     public Result addTypeFieldValue(String streamId) {
         return ok("TODO implement.");
+    }
+
+    public Result removeCondition(String streamId, String conditionId) {
+        try {
+            Stream stream = streamService.get(streamId);
+            alertConditionService.delete(stream, conditionId);
+
+            flash("success", "Deleted alert condition.");
+            return redirect(routes.AlertsController.index(streamId));
+        } catch (IOException e) {
+            return status(504, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not fetch stream. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
+            return status(504, views.html.errors.error.render(message, e, request()));
+        }
     }
 
     private boolean checkParam(String key, Map<String,String> form) {
