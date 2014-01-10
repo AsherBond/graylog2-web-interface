@@ -1,5 +1,5 @@
-/*
- * Copyright 2013 TORCH UG
+/**
+ * Copyright 2013 Lennart Koopmann <lennart@torch.sh>
  *
  * This file is part of Graylog2.
  *
@@ -15,19 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package controllers;
+package models;
 
-import lib.security.RedirectAuthenticator;
-import models.User;
-import models.UserService;
-import play.mvc.Security.Authenticated;
+import models.api.responses.alerts.AlertConditionSummaryResponse;
 
-@Authenticated(RedirectAuthenticator.class)
-public class AuthenticatedController extends BaseController {
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
+public class AlertCondition {
 
-	protected static User currentUser() {
-        return UserService.current();
-	}
+    public interface Factory {
+        public AlertCondition fromSummaryResponse(AlertConditionSummaryResponse acsr);
+    }
 
 }
