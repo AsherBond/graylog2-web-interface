@@ -117,7 +117,7 @@ public class Radio extends ClusterEntity {
     }
 
     public String getNodeId() {
-        return getShortNodeId();
+        return id;
     }
 
     @Override
@@ -288,6 +288,9 @@ public class Radio extends ClusterEntity {
                     .body(request)
                     .expect(Http.Status.ACCEPTED)
                     .execute();
+
+            // TODO lolwut
+            return new InputLaunchResponse();
         } catch (APIException e) {
             log.error("Could not launch input " + title, e);
         } catch (IOException e) {
