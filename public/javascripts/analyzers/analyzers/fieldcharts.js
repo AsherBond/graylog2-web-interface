@@ -1,18 +1,11 @@
 $(document).ready(function() {
     var palette = new Rickshaw.Color.Palette({ scheme: 'colorwheel' });
 
-    $(".analyze-field .generate-graph .pie-chart").on("click", function(e) {
-        e.preventDefault();
-
-        // TODO
-        alert("Pie charts are not implemented yet. (GitHub issue: #259)");
-    });
-
-    $(".analyze-field .generate-graph .line-chart").on("click", function(e) {
+    $(".analyze-field .line-chart").on("click", function(e) {
         e.preventDefault();
 
         opts = {}
-        opts.field = $(this).parent().parent().parent().attr("data-field");
+        opts.field = $(this).attr("data-field");
         var container = $(this).closest(".analyze-field");
         if (!!container.attr("data-stream-id")) {
             opts.streamid = container.attr("data-stream-id");
@@ -195,6 +188,10 @@ $(document).ready(function() {
                 if (opts.renderer == "area") {
                     graph.renderer.stroke = true;
                 }
+
+                // TODO make this a graph options. what to choose by default? #471
+                graph.renderer.unstack = false;
+
 
                 graph.render();
 
@@ -456,7 +453,6 @@ $(document).ready(function() {
         var targetElem = $('.field-graph-container[data-chart-id="' + targetId + '"]');
         var draggedElem = $('.field-graph-container[data-chart-id="' + draggedId + '"]');
 
-        // TODO support multiple (data-lines must be an array)
         var draggedOpts = JSON.parse(draggedElem.attr("data-lines"));
 
         // Update title and description.
@@ -478,7 +474,6 @@ $(document).ready(function() {
 
             $("ul.field-graph-query-container", targetElem).append("<li>" + queryDescription + "</li>");
 
-            // TODO support multiple
             var addSeries = {
                 name: "value" + i,
                 color: lineColor,
@@ -490,8 +485,10 @@ $(document).ready(function() {
             targetChart.series.push(addSeries);
         }
 
-        // TODO make this a graph options. what to choose by default?
-        //targetChart.renderer.unstack = true;
+        // TODO make this a graph options. what to choose by default? #471
+        targetChart.renderer.unstack = false;
+
+        $(".hide-combined-chart", targetElem).hide();
 
         // Reflect all the chart changes we made.
         targetChart.update();

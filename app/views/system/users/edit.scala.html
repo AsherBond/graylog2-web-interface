@@ -7,6 +7,7 @@
         selectedPermissions: Set[String],
         timezones: Map[String, Collection[String]],
         streams: List[models.Stream],
+        dashboards: List[models.dashboards.Dashboard],
         breadcrumbs: lib.BreadcrumbList)
 @import com.google.common.collect.ImmutableList
 @import views.helpers.Permissions._
@@ -46,15 +47,34 @@
                             <option @if(isPermitted(user, STREAMS_READ, stream.getId)) {selected} value="@stream.getId">@stream.getTitle</option>
                         }
                         </select>
-                        <span class="help-inline">Choose streams the user can view. Removing read access will remove edit access, too.</span>
+                        <span class="help-inline">Choose streams the user can <strong>view</strong>. Removing read access will remove edit access, too.</span>
+
 
                         <select class="streameditpermissions" name="streameditpermissions[]" id="streameditpermissions" data-placeholder="Choose edit permissions..." multiple>
                         @for(stream <- streams.sortBy(_.getTitle)) {
                             <option @if(isPermitted(user, STREAMS_EDIT, stream.getId)) {selected} value="@stream.getId">@stream.getTitle</option>
                         }
                         </select>
-                        <span class="help-inline">Choose the streams the user can edit. Values chosen here will enable read access, too.</span>
+                        <span class="help-inline">Choose the streams the user can <strong>edit</strong>. Values chosen here will enable read access, too.</span>
 
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="dashboardpermissions">Dashboard Permissions</label>
+                    <div class="controls">
+                        <select id="dashboardpermissions" name="dashboardpermissions[]" data-placeholder="Choose read permissions..." multiple>
+                        @for(dashboard <- dashboards.sortBy(_.getTitle)) {
+                            <option @if(isPermitted(user, DASHBOARDS_READ, dashboard.getId)) {selected} value="@dashboard.getId">@dashboard.getTitle</option>
+                        }
+                        </select>
+                        <span class="help-inline">Choose dashboards the user can <strong>view</strong>. Removing read access will remove edit access, too.</span>
+
+                        <select class="dashboardeditpermissions" id="dashboardeditpermissions" name="dashboardeditpermissions[]" data-placeholder="Choose edit permissions..." multiple>
+                        @for(dashboard <- dashboards.sortBy(_.getTitle)) {
+                            <option @if(isPermitted(user, DASHBOARDS_EDIT, dashboard.getId)) {selected} value="@dashboard.getId">@dashboard.getTitle</option>
+                        }
+                        </select>
+                        <span class="help-inline">Choose dashboards the user can <strong>edit</strong>. Values chosen here will enable read access, too.</span>
                     </div>
                 </div>
                 }
@@ -123,18 +143,20 @@
     @if(isPermitted(USERS_PERMISSIONSEDIT)) {
     <div class="row-fluid">
         <h2><h2><i class="icon icon-bolt"></i> Reset Permissions</h2>
+
         <form class="form form-horizontal" action="@routes.UsersController.resetPermissions(user.getName)" method="POST">
-            <button class="btn btn-danger btn-small pull-right" type="submit" data-confirm="Really reset permissions for @user.getName?">
+            <button class="btn btn-danger" type="submit" data-confirm="Really reset permissions for @user.getName?" style="margin-top: 10px; margin-bottom: 10px;">
                 Reset Permissions
             </button>
-            <div class="control-group">
-                <label for="admin" class="control-label">Assign administrator permissions?</label>
-                <div class="controls">
-                    <input type="checkbox" id="admin" name="admin" @if(isPermitted(user, "*")) {selected} />
-                    <span class="help-inline">All permissions will be reset, assigned stream permissions will be lost!</span>
-                </div>
-            </div>
+
+            <label class="checkbox">
+                <input type="checkbox" id="admin" name="admin" @if(isPermitted(user, "*")) {selected} />
+                Assign administrator permissions?
+            </label>
+
+            All permissions will be reset, assigned stream permissions will be lost!
         </form>
+
     </div>
     }
     <div class="row-fluid">

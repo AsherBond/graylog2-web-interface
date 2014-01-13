@@ -117,6 +117,7 @@ public class DashboardsApiController extends AuthenticatedController {
     public Result addWidget(String dashboardId) {
         try {
             final Map<String, String> params = flattenFormUrlEncoded(request().body().asFormUrlEncoded());
+
             String query = params.get("query");
             String rangeType = params.get("rangeType");
             String description = params.get("description");
@@ -138,6 +139,13 @@ public class DashboardsApiController extends AuthenticatedController {
                 return status(400, views.html.errors.error.render("Invalid range type provided.", e1, request()));
             }
 
+            String streamId;
+            if(params.containsKey("streamId")) {
+                streamId = params.get("streamId");
+            } else {
+                streamId = params.get("streamid");
+            }
+
             DashboardWidget widget;
             try {
                 switch (DashboardWidget.Type.valueOf(params.get("widgetType"))) {
@@ -145,7 +153,7 @@ public class DashboardsApiController extends AuthenticatedController {
                         widget = new SearchResultCountWidget(dashboard, query, timerange, description);
                         break;
                     case STREAM_SEARCH_RESULT_COUNT:
-                        widget = new StreamSearchResultCountWidget(dashboard, query, timerange, description, params.get("streamId"));
+                        widget = new StreamSearchResultCountWidget(dashboard, query, timerange, description, streamId);
                         break;
                     case FIELD_CHART:
                         Map<String, Object> config = new HashMap<String, Object>() {{
@@ -156,7 +164,7 @@ public class DashboardsApiController extends AuthenticatedController {
                             put("interval", params.get("interval"));
                         }};
 
-                        widget = new FieldChartWidget(dashboard, query, timerange, description, params.get("streamId"), config);
+                        widget = new FieldChartWidget(dashboard, query, timerange, description, streamId, config);
                         break;
                     default:
                         throw new IllegalArgumentException();
