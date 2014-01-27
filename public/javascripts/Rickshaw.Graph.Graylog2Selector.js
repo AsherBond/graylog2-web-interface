@@ -85,16 +85,16 @@ Rickshaw.Graph.Graylog2Selector = Rickshaw.Class.create({
             position.xMin = Math.round(graph.x.invert(position.minX));
             position.xMax = Math.round(graph.x.invert(position.maxX));
 
-            var from = $('#universalsearch .absolute input[name="from"]');
-            var to = $('#universalsearch .absolute input[name="to"]');
+            var from = $('#universalsearch .absolute .absolute-from-human');
+            var to = $('#universalsearch .absolute .absolute-to-human');
 
             if (!isNumber(position.xMin) || !isNumber(position.xMax)) {
                 clearSelection();
                 return;
             }
 
-            var fromDate = new Date((position.xMin+new Date().getTimezoneOffset()*60)*1000);
-            var toDate = new Date((position.xMax+new Date().getTimezoneOffset()*60)*1000);
+            var fromDate = new Date((position.xMin)*1000);
+            var toDate = new Date((position.xMax)*1000);
 
             activateTimerangeChooser("absolute", $('.timerange-selector-container .dropdown-menu a[data-selector-name="absolute"]'));
             from.val(searchDateTimeFormatted(fromDate));
