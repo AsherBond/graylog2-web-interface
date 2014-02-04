@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Lennart Koopmann <lennart@torch.sh>
+ * Copyright 2014 Lennart Koopmann <lennart@torch.sh>
  *
  * This file is part of Graylog2.
  *
@@ -17,18 +17,32 @@
  * along with Graylog2.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package models.api.responses;
+package lib;
 
-import java.util.Map;
+import play.Logger;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
  */
-public class SourcesResponse {
+public class Localhost {
 
-    public int total;
-    public Map<String, Long> sources;
+    public static String LOCAL_HOSTNAME = null;
 
-    public int range;
+    public static String getLocalHostname() {
+        if (LOCAL_HOSTNAME != null) {
+            return LOCAL_HOSTNAME;
+        }
+
+        try {
+            LOCAL_HOSTNAME = InetAddress.getLocalHost().getHostName();
+            return LOCAL_HOSTNAME;
+        } catch (UnknownHostException e) {
+            Logger.error("Could not get local hostname.", e);
+            return "unknown";
+        }
+    }
 
 }
