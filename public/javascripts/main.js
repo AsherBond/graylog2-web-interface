@@ -1,6 +1,27 @@
 $(document).ready(function() {
 
-	// Opening messages in sidebar with click in message result table.
+    ZeroClipboard.config( { moviePath: "/assets/images/ZeroClipboard.swf" } );
+    clipBoardClient = new ZeroClipboard($(".copy-clipboard"));
+
+    clipBoardClient.on( 'mouseover', function(client, args) {
+        $(this)
+            .attr('data-original-title', $(this).attr('data-initial-title'))
+            .tooltip({delay: { show: 0, hide: 0 }})
+            .tooltip('fixTitle')
+            .tooltip('show');
+    });
+    clipBoardClient.on( 'mouseout', function(client, args) {
+        $(this).tooltip('hide');
+    });
+    clipBoardClient.on( 'complete', function(client, args) {
+        $(this).tooltip('destroy');
+        $(this).attr('data-original-title', "Copied.")
+            .tooltip({delay: { show: 0, hide: 250 }})
+            .tooltip('fixTitle')
+            .tooltip('show');
+    });
+
+    // Opening messages in sidebar with click in message result table.
 	$(".messages tbody > tr").bind("click", function() {
 		messageId = $(this).attr("data-message-id");
 		index = $(this).attr("data-source-index");
@@ -133,11 +154,63 @@ $(document).ready(function() {
         }
         // replace the href with our version containing the selected fields
         var href = $(this).attr("href");
-        console.log(href);
         var uri = new URI(href);
-        var existing = uri.removeQuery("fields");
+        uri.removeQuery("fields");
         uri.addQuery("fields", fields);
         $(this).attr("href", uri.toString());
+    });
+
+    $(".fields-set-chooser").click(function(e) {
+        e.preventDefault();
+        var setName = $(this).data('fields-set');
+        var fields = searchViewState.getFields();
+        var i = 0;
+        var field;
+
+        switch (setName) {
+            case "none":
+                for (i = 0; i < fields.length; i++) {
+                    field = fields[i];
+                    $(".field-selector[data-field-name="+field+"]").each(function(){
+                        if ($(this).is(":checked")) {
+                            $(this).trigger("click");
+                        }
+                    });
+                }
+                break;
+            case "default":
+                // iterate over all selected fields, and turn them off, except if it's source or message
+                for (i = 0; i < fields.length; i++) {
+                    field = fields[i];
+                    if (field === "source" || field === "message") {
+                        // leave source and message turned on
+                        continue;
+                    }
+                    $(".field-selector[data-field-name="+field+"]").each(function(){
+                        if ($(this).is(":checked")) {
+                            $(this).trigger("click");
+                        }
+                    });
+                }
+                // make sure source and message are on
+                $("#field-selector-36cd38f49b9afa08222c0dc9ebfe35eb, #field-selector-78e731027d8fd50ed642340b7c9a63b3").each(function(){
+                    if (!$(this).is(":checked")) {
+                        $(this).trigger("click");
+                    }
+                });
+                break;
+            case "all":
+                // for 'all' only toggle the page we are on, we don't need to toggle _all_ fields
+                var selectedPage = $(".search-result-fields").attr("data-selected");
+                $("." + selectedPage + " > .field-selector").each(function() {
+                    // turn those fields on that aren't checked.
+                    if (!$(this).is(":checked")) {
+                        $(this).trigger("click");
+                    }
+                });
+                break;
+            default: console.log("Error, unknown fields set " + setName);
+        }
     });
 
     // Call resizedWindow() only at end of resize event so we do not trigger all the time while resizing.
@@ -195,7 +268,7 @@ $(document).ready(function() {
                             }
                         });
 
-                        if (!included) {                                              FA
+                        if (!included) {
                             $(this).removeClass("systemjob-progress");
                             $(".progress .bar", $(this)).css("width", "100%");
                             $(".progress", $(this)).removeClass("active");
@@ -970,6 +1043,8 @@ function parseDateFromString(src) {
     return new Date(parts[1], parts[2]-1, parts[3], parts[4], parts[5], parts[6], millis);
 }
 
+clipBoardClient = {};
+
 // This is holding all field graphs.
 fieldGraphs = {};
 
@@ -989,15 +1064,18 @@ searchViewState = {
         this.updateFragment();
     },
     setSelectedFields: function(fieldsArray) {
-        console.log(fieldsArray);
+        // reset the fields first
+        this.fields = {};
         for (var idx = 0; idx < fieldsArray.length; idx++) {
             this.fields[fieldsArray[idx]] = true;
         }
-        console.log(this.fields);
         this.updateFragment();
     },
+    getFields: function() {
+        return Object.keys(this.fields);
+    },
     getFieldsString: function() {
-        return Object.keys(this.fields).sort().join(",");
+        return this.getFields().sort().join(",");
     },
     updateFragment: function() {
         var uri = new URI();
