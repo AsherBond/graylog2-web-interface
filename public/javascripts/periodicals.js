@@ -11,13 +11,6 @@ $(window).focus(function(){
 
 
 $(document).ready(function() {
-    $.ajaxSetup({
-        statusCode: {
-            401: function() {
-                window.location.href = "/"; // TODO use router!
-            }
-        }
-    });
     // Total event counts;
     (function updateTotalEvents() {
         if ($(".total-events").length > 0) {
@@ -29,7 +22,7 @@ $(document).ready(function() {
             }
 
             $.ajax({
-                url: '/a/messagecounts/total',
+                url: appPrefixed('/a/messagecounts/total'),
                 headers: { "X-Graylog2-No-Session-Extension" : "true"},
                 success: function(data) {
                     $(".total-events").animatedIntChange(data.events, 500)
@@ -55,7 +48,7 @@ $(document).ready(function() {
             }
 
             $.ajax({
-                url: '/a/system/throughput',
+                url: appPrefixed('/a/system/throughput'),
                 headers: { "X-Graylog2-No-Session-Extension" : "true"},
                 success: function(data) {
                     $(".total-throughput").text(data.throughput);
@@ -100,7 +93,7 @@ $(document).ready(function() {
 
                 var thisNodeT = $(this);
                 $.ajax({
-                    url: url,
+                    url: appPrefixed(url),
                     headers: { "X-Graylog2-No-Session-Extension" : "true"},
                     success: function(data) {
                         thisNodeT.text(data.throughput);
@@ -140,7 +133,7 @@ $(document).ready(function() {
 
                 var thisHeap = $(this);
                 $.ajax({
-                    url: url,
+                    url: appPrefixed(url),
                     headers: { "X-Graylog2-No-Session-Extension" : "true"},
                     success: function(data) {
                         var total_percentage = data.total_percentage-data.used_percentage;
@@ -176,7 +169,7 @@ $(document).ready(function() {
             var inputId = $(this).attr("data-input-id");
             var io = $(this);
             $.ajax({
-                url: '/a/system/inputs/global/' + encodeURIComponent(inputId) + '/io',
+                url: appPrefixed('/a/system/inputs/global/' + encodeURIComponent(inputId) + '/io'),
                 headers: { "X-Graylog2-No-Session-Extension" : "true"},
                 success: function(data) {
                     $(".global-persec .rx", io).text(data.rx);
@@ -194,7 +187,7 @@ $(document).ready(function() {
             var io = $(this);
 
             $.ajax({
-                url: '/a/system/inputs/' + encodeURIComponent(nodeId) + '/' + encodeURIComponent(inputId) + '/io',
+                url: appPrefixed('/a/system/inputs/' + encodeURIComponent(nodeId) + '/' + encodeURIComponent(inputId) + '/io'),
                 headers: { "X-Graylog2-No-Session-Extension" : "true"},
                 success: function(data) {
                     $(".persec .rx", io).text(data.rx);
@@ -315,7 +308,7 @@ $(document).ready(function() {
             var connections = $(this);
 
             $.ajax({
-                url: '/a/system/inputs/' + encodeURIComponent(nodeId) + '/' + encodeURIComponent(inputId) + '/connections',
+                url: appPrefixed('/a/system/inputs/' + encodeURIComponent(nodeId) + '/' + encodeURIComponent(inputId) + '/connections'),
                 headers: { "X-Graylog2-No-Session-Extension" : "true"},
                 success: function(data) {
                     $(".total", connections).text(data.total);
@@ -369,7 +362,7 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: '/a/system/notifications',
+            url: appPrefixed('/a/system/notifications'),
             headers: { "X-Graylog2-No-Session-Extension" : "true"},
             success: function(data) {
                 var count = data.length;
@@ -423,7 +416,7 @@ $(document).ready(function() {
 
                 var logs = $(this);
                 $.ajax({
-                    url: '/a/system/internallogs/' + encodeURIComponent(nodeId),
+                    url: appPrefixed('/a/system/internallogs/' + encodeURIComponent(nodeId)),
                     headers: { "X-Graylog2-No-Session-Extension" : "true"},
                     success: function(data) {
                         logs.animatedIntChange(data.total, 500);
@@ -449,7 +442,7 @@ $(document).ready(function() {
 
                 var theseMetrics = $(this);
                 $.ajax({
-                    url: '/a/system/internallogs/' + encodeURIComponent(nodeId) + '/metrics',
+                    url: appPrefixed('/a/system/internallogs/' + encodeURIComponent(nodeId) + '/metrics'),
                     headers: { "X-Graylog2-No-Session-Extension" : "true"},
                     success: function(data) {
                         for (var level in data) {

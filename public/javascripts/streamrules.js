@@ -10,6 +10,20 @@ $(document).ready(function() {
         value = $(this).val();
         var modalBody = $(this).closest("form#streamrule-form").find(".modal-body");
 
+        if ($(this).attr("id") == "sr-type") {
+            if (parseInt(value) == 5) {
+                $("#sr-value", modalBody).hide();
+                $("#sr-value", modalBody).val("placeholder");
+                $("#sr-label-value", modalBody).hide();
+                $("#sr-result-value", modalBody).hide();
+            } else {
+                $("#sr-value", modalBody).val("");
+                $("#sr-value", modalBody).show();
+                $("#sr-label-value", modalBody).show();
+                $("#sr-result-value", modalBody).show();
+            }
+        }
+
         if (value != undefined && value != "") {
             // Selectbox options can have a custom replace string.
             s = $("option:selected", this);
@@ -34,7 +48,7 @@ $(document).ready(function() {
         if (result) {
             var elem = $(this).parent();
             var url = event.currentTarget.attributes["data-removeUrl"].value;
-            $.post(url, {}, function() {
+            $.post(appPrefixed(url), {}, function() {
                 var parent_list = $(elem).closest("ul");
                 elem.remove();
 
@@ -111,7 +125,7 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: url,
+            url: appPrefixed(url),
             type: "POST",
             data: rule,
             dataType: "html",
@@ -187,7 +201,7 @@ $(document).ready(function() {
         var data = { "message" : message.fields };
 
         $.ajax({
-            url: '/a/streams/' + streamId + '/testMatch',
+            url: appPrefixed('/a/streams/' + streamId + '/testMatch'),
             type: "POST",
             data: JSON.stringify(data),
             contentType: "application/json",
