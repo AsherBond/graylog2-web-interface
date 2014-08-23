@@ -19,7 +19,8 @@
 package lib.notifications;
 
 import com.google.common.collect.Maps;
-import models.SystemJob;
+import org.graylog2.restclient.models.Notification;
+import org.graylog2.restclient.models.SystemJob;
 
 import java.util.Map;
 
@@ -34,6 +35,16 @@ public class MultiMasterNotification implements NotificationType {
             "there already is a master but you should still fix this. Check the graylog2.conf of every node and " +
             "make sure that only one instance has is_master set to true. Close this notification if you think you " +
             "resolved the problem. It will pop back up if you start a second master node again.";
+    private final Notification notification;
+
+    public MultiMasterNotification(Notification notification) {
+        this.notification = notification;
+    }
+
+    @Override
+    public Notification getNotification() {
+        return notification;
+    }
 
     @Override
     public Map<SystemJob.Type, String> options() {

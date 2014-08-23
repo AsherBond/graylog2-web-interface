@@ -1,4 +1,4 @@
-@(field: lib.plugin.configuration.DropdownField)
+@(field: org.graylog2.restclient.lib.plugin.configuration.DropdownField)
 
 <label>
     @field.getHumanName
@@ -9,7 +9,7 @@
 </label>
 <span class="help-block">@field.getDescription</span>
 
-<select name="configuration_@field.getTitle"
+<select name="configuration[@field.getTitle]"
         class="input-xlarge"
         @if(!field.isOptional) {
             required

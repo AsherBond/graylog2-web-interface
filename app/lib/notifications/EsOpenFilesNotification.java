@@ -20,7 +20,8 @@
 package lib.notifications;
 
 import com.google.common.collect.Maps;
-import models.SystemJob;
+import org.graylog2.restclient.models.Notification;
+import org.graylog2.restclient.models.SystemJob;
 
 import java.util.Map;
 
@@ -34,6 +35,17 @@ public class EsOpenFilesNotification implements NotificationType {
                                               "open file limit. (below 64000) This will be causing problems that can be hard to diagnose. " +
                                               "Read how to raise the maximum number of open files in " +
                                               "<a href='http://support.torch.sh/help/kb/graylog2-server/configuring-and-tuning-elasticsearch-for-graylog2-v0200' target='_blank'>the documentation</a>.";
+
+    private final Notification notification;
+
+    public EsOpenFilesNotification(Notification notification) {
+        this.notification = notification;
+    }
+
+    @Override
+    public Notification getNotification() {
+        return notification;
+    }
 
     @Override
     public Map<SystemJob.Type, String> options() {

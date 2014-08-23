@@ -20,9 +20,10 @@ package models;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import models.accounts.LdapSettings;
-import models.alerts.AlertCondition;
-import models.dashboards.Dashboard;
+import org.graylog2.restclient.models.*;
+import org.graylog2.restclient.models.accounts.LdapSettings;
+import org.graylog2.restclient.models.alerts.AlertCondition;
+import org.graylog2.restclient.models.dashboards.Dashboard;
 
 /**
  * Provides the bindings for the factories of our models to avoid having lots of static methods everywhere.
@@ -45,6 +46,7 @@ public class ModelFactoryModule extends AbstractModule {
         install(new FactoryModuleBuilder().build(SavedSearch.Factory.class));
         install(new FactoryModuleBuilder().build(AlertCondition.Factory.class));
         install(new FactoryModuleBuilder().build(InputState.Factory.class));
+        install(new FactoryModuleBuilder().build(AlarmCallback.Factory.class));
 
         // TODO crutch, because we need the factory for systemjobs in all().
         // can this be done with a second factory for the list?

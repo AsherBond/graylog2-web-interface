@@ -23,18 +23,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import lib.APIException;
-import lib.ApiClient;
 import lib.BreadcrumbList;
-import lib.Version;
-import models.*;
-import models.api.requests.ExtractorImportRequest;
-import models.api.requests.ExtractorListImportRequest;
+import org.graylog2.restclient.lib.APIException;
+import org.graylog2.restclient.lib.ApiClient;
+import org.graylog2.restclient.lib.Version;
+import org.graylog2.restclient.models.*;
+import org.graylog2.restclient.models.api.requests.ExtractorImportRequest;
+import org.graylog2.restclient.models.api.requests.ExtractorListImportRequest;
 import play.Logger;
 import play.mvc.Result;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -152,7 +151,7 @@ public class ExtractorsController extends AuthenticatedController {
             return status(404, views.html.errors.error.render(ApiClient.ERROR_MSG_NODE_NOT_FOUND, e, request()));
         }
 
-        return redirect(routes.ExtractorsController.manage(nodeId, inputId));
+        return redirect(controllers.routes.ExtractorsController.manage(nodeId, inputId));
     }
 
     public Result delete(String nodeId, String inputId, String extractorId) {
@@ -160,7 +159,7 @@ public class ExtractorsController extends AuthenticatedController {
             Node node = nodeService.loadNode(nodeId);
             extractorService.delete(node, node.getInput(inputId), extractorId);
 
-            return redirect(routes.ExtractorsController.manage(nodeId, inputId));
+            return redirect(controllers.routes.ExtractorsController.manage(nodeId, inputId));
         } catch (IOException e) {
             return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
         } catch (APIException e) {
@@ -177,7 +176,7 @@ public class ExtractorsController extends AuthenticatedController {
             Input input = node.getInput(inputId);
 
             BreadcrumbList bc = standardBreadcrumbs(node, input);
-            bc.addCrumb("Export", routes.ExtractorsController.exportExtractors(nodeId, inputId));
+            bc.addCrumb("Export", controllers.routes.ExtractorsController.exportExtractors(nodeId, inputId));
 
             Map<String, Object> result = Maps.newHashMap();
             List<Map<String, Object>> extractors = Lists.newArrayList();
@@ -218,7 +217,7 @@ public class ExtractorsController extends AuthenticatedController {
             Input input = node.getInput(inputId);
 
             BreadcrumbList bc = standardBreadcrumbs(node, input);
-            bc.addCrumb("Import", routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
+            bc.addCrumb("Import", controllers.routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
 
             return ok(views.html.system.inputs.extractors.importPage.render(
                     currentUser(),
@@ -241,7 +240,7 @@ public class ExtractorsController extends AuthenticatedController {
 
         if(!form.containsKey("extractors") || form.get("extractors").isEmpty()) {
             flash("error", "No JSON provided. Please fill out the import definition field.");
-            return redirect(routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
+            return redirect(controllers.routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
         }
 
         ExtractorListImportRequest elir;
@@ -251,7 +250,7 @@ public class ExtractorsController extends AuthenticatedController {
         } catch(Exception e) {
             Logger.error("Could not read JSON.", e);
             flash("error", "Could not read JSON.");
-            return redirect(routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
+            return redirect(controllers.routes.ExtractorsController.importExtractorsPage(nodeId, inputId));
         }
 
         /*
@@ -291,16 +290,16 @@ public class ExtractorsController extends AuthenticatedController {
         }
 
         flash("success", "Successfully imported " + successes + " of " + elir.extractors.size() + " extractors.");
-        return redirect(routes.ExtractorsController.manage(nodeId, inputId));
+        return redirect(controllers.routes.ExtractorsController.manage(nodeId, inputId));
     }
 
     private static BreadcrumbList standardBreadcrumbs(Node node, Input input) {
         BreadcrumbList bc = new BreadcrumbList();
-        bc.addCrumb("System", routes.SystemController.index(0));
-        bc.addCrumb("Nodes", routes.NodesController.nodes());
-        bc.addCrumb(node.getShortNodeId(), routes.NodesController.node(node.getNodeId()));
+        bc.addCrumb("System", controllers.routes.SystemController.index(0));
+        bc.addCrumb("Nodes", controllers.routes.NodesController.nodes());
+        bc.addCrumb(node.getShortNodeId(), controllers.routes.NodesController.node(node.getNodeId()));
         bc.addCrumb("Input: " + input.getTitle(), null);
-        bc.addCrumb("Extractors", routes.ExtractorsController.manage(node.getNodeId(), input.getId()));
+        bc.addCrumb("Extractors", controllers.routes.ExtractorsController.manage(node.getNodeId(), input.getId()));
 
         return bc;
     }

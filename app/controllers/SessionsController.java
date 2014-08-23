@@ -18,17 +18,16 @@
  */
 package controllers;
 
-import com.google.gson.annotations.SerializedName;
-import com.google.inject.Inject;
-import lib.APIException;
-import lib.ServerNodes;
-import lib.Graylog2ServerUnavailableException;
+import org.graylog2.restclient.lib.APIException;
+import org.graylog2.restclient.lib.ServerNodes;
+import org.graylog2.restclient.lib.Graylog2ServerUnavailableException;
 import lib.security.RedirectAuthenticator;
 import models.LoginRequest;
-import models.UserService;
-import models.api.requests.ApiRequest;
+import org.graylog2.restclient.models.SessionService;
+import org.graylog2.restclient.models.UserService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
+import org.graylog2.restclient.models.api.responses.SessionCreateResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.data.Form;
@@ -37,8 +36,8 @@ import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
 
+import javax.inject.Inject;
 import java.io.IOException;
-import java.util.Date;
 
 import static play.data.Form.form;
 
@@ -47,12 +46,18 @@ public class SessionsController extends BaseController {
 
 	final static Form<LoginRequest> userForm = form(LoginRequest.class);
 
-    @Inject
-    ServerNodes serverNodes;
-	@Inject
-    RedirectAuthenticator authenticator;
+    private final ServerNodes serverNodes;
+    private final RedirectAuthenticator authenticator;
+    private final SessionService sessionService;
 
-	public Result index(String destination) {
+    @Inject
+    public SessionsController(ServerNodes serverNodes, RedirectAuthenticator authenticator, SessionService sessionService) {
+        this.serverNodes = serverNodes;
+        this.authenticator = authenticator;
+        this.sessionService = sessionService;
+    }
+
+    public Result index(String destination) {
         // Redirect if already logged in.
         String loggedInUserName = authenticator.getUsername(ctx());
         if (loggedInUserName != null) {
@@ -91,11 +96,7 @@ public class SessionsController extends BaseController {
 		LoginRequest r = loginRequest.get();
 
         try {
-            final SessionResponse sessionResponse = api().post(SessionResponse.class)
-                    .path("/system/sessions")
-                    .unauthenticated()
-                    .body(new SessionCreateRequest(r.username, r.password, request().remoteAddress()))
-                    .execute();
+            final SessionCreateResponse sessionResponse = sessionService.create(r.username, r.password, request().remoteAddress());
             // if we have successfully created a session, we can save that id for the next request
             final String cookieContent = Crypto.encryptAES(r.username + "\t" + sessionResponse.sessionId);
             Http.Context.current().session().put("sessionid", cookieContent);
@@ -130,10 +131,7 @@ public class SessionsController extends BaseController {
         final String sessionId = UserService.current().getSessionId();
         try {
             if (sessionId != null) {
-                api().delete()
-                        .path("/system/sessions/{0}", sessionId)
-                        .expect(NO_CONTENT, NOT_FOUND)
-                        .execute();
+                sessionService.destroy(sessionId);
             }
         } catch (APIException | IOException e) {
             log.info("Unable to end session for user {}", UserService.current().getName());
@@ -142,24 +140,4 @@ public class SessionsController extends BaseController {
 		session().clear();
 		return redirect(routes.StartpageController.redirect());
 	}
-
-    private class SessionResponse {
-        @SerializedName("session_id")
-        public String sessionId;
-
-        @SerializedName("valid_until")
-        public Date validUntil;
-    }
-
-    private class SessionCreateRequest extends ApiRequest {
-        private final String username;
-        private final String password;
-        private final String host;
-
-        public SessionCreateRequest(String username, String password, String host) {
-            this.username = username;
-            this.password = password;
-            this.host = host;
-        }
-    }
 }

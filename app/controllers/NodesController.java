@@ -21,11 +21,11 @@ package controllers;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import lib.APIException;
-import lib.ApiClient;
+import org.graylog2.restclient.lib.APIException;
+import org.graylog2.restclient.lib.ApiClient;
 import lib.BreadcrumbList;
-import lib.ServerNodes;
-import models.*;
+import org.graylog2.restclient.lib.ServerNodes;
+import org.graylog2.restclient.models.*;
 import play.mvc.Result;
 
 import java.io.IOException;
@@ -42,12 +42,18 @@ import static views.helpers.Permissions.isPermitted;
  */
 public class NodesController extends AuthenticatedController {
 
+    private final NodeService nodeService;
+    private final ClusterService clusterService;
+    private final ServerNodes serverNodes;
+    private final PluginService pluginService;
+
     @Inject
-    private NodeService nodeService;
-    @Inject
-    private ClusterService clusterService;
-    @Inject
-    private ServerNodes serverNodes;
+    public NodesController(NodeService nodeService, ClusterService clusterService, ServerNodes serverNodes, PluginService pluginService) {
+        this.nodeService = nodeService;
+        this.clusterService = clusterService;
+        this.serverNodes = serverNodes;
+        this.pluginService = pluginService;
+    }
 
     public Result nodes() {
         BreadcrumbList bc = new BreadcrumbList();
@@ -82,14 +88,21 @@ public class NodesController extends AuthenticatedController {
         try {
             Node node = nodeService.loadNode(nodeId);
 
+            List<Plugin> installedPlugins = pluginService.list(node);
+
             BreadcrumbList bc = new BreadcrumbList();
             bc.addCrumb("System", routes.SystemController.index(0));
             bc.addCrumb("Nodes", routes.NodesController.nodes());
             bc.addCrumb(node.getShortNodeId(), routes.NodesController.node(node.getNodeId()));
 
-            return ok(views.html.system.nodes.show.render(currentUser(), bc, node));
+            return ok(views.html.system.nodes.show.render(currentUser(), bc, node, installedPlugins));
         } catch (NodeService.NodeNotFoundException e) {
             return status(404, views.html.errors.error.render(ApiClient.ERROR_MSG_NODE_NOT_FOUND, e, request()));
+        } catch (IOException e) {
+            return status(504, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not fetch node information. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
+            return status(504, views.html.errors.error.render(message, e, request()));
         }
     }
 

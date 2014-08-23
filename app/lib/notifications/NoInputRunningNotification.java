@@ -2,7 +2,8 @@ package lib.notifications;
 
 import com.google.common.collect.Maps;
 import controllers.routes;
-import models.SystemJob;
+import org.graylog2.restclient.models.Notification;
+import org.graylog2.restclient.models.SystemJob;
 
 import java.util.Map;
 
@@ -13,8 +14,11 @@ public class NoInputRunningNotification implements NotificationType {
 
     private final String TITLE;
     private final String DESCRIPTION;
+    private final Notification notification;
 
-    public NoInputRunningNotification(String node_id) {
+    public NoInputRunningNotification(Notification notification) {
+        this.notification = notification;
+        // TODO: move this to helper
         DESCRIPTION = "There is a node without any running inputs.  " +
                 "This means that you are not receiving any messages from this node at this point in time. This is most probably " +
                 "an indication of an error or misconfiguration. " + "" +
@@ -25,6 +29,11 @@ public class NoInputRunningNotification implements NotificationType {
     @Override
     public Map<SystemJob.Type, String> options() {
         return Maps.newHashMap();
+    }
+
+    @Override
+    public Notification getNotification() {
+        return notification;
     }
 
     @Override

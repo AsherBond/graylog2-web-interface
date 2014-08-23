@@ -1,4 +1,4 @@
-@(field: lib.plugin.configuration.RequestedConfigurationField)
+@(field: org.graylog2.restclient.lib.plugin.configuration.RequestedConfigurationField)
 
 <label>
     @field.getHumanName
@@ -8,7 +8,7 @@
     }
 </label>
 <span class="help-block">@field.getDescription</span>
-<input name="configuration_@field.getTitle"
+<input name="configuration[@field.getTitle]"
 
     @if(!field.isOptional) {
         required

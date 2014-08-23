@@ -18,7 +18,8 @@
  */
 package lib.notifications;
 
-import models.SystemJob;
+import org.graylog2.restclient.models.Notification;
+import org.graylog2.restclient.models.SystemJob;
 
 import java.util.Map;
 
@@ -31,5 +32,5 @@ public interface NotificationType {
     public String getTitle();
     public String getDescription();
     public boolean isCloseable();
-
+    public Notification getNotification();
 }
