@@ -17,7 +17,7 @@ GET         /                                                                   
 GET         /startpage                                                               @controllers.StartpageController.redirect()
 
 # Search
-GET         /search                                                                  @controllers.SearchController.index(q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", interval ?= "", page:Integer ?= 1, saved:String ?= "", sortField:String ?= "", sortOrder:String ?= "", fields:String ?= "")
+GET         /search                                                                  @controllers.SearchController.index(q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", interval ?= "", page:Integer ?= 1, saved:String ?= "", sortField:String ?= "", sortOrder:String ?= "", fields:String ?= "", width:Integer ?= -1)
 GET         /search/csv                                                              @controllers.SearchController.exportAsCsv(q ?= "", filter ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", fields:String ?= "")
 
 # Messages
@@ -28,7 +28,7 @@ GET         /messages/:index/:id/partial                                        
 GET         /streams                                                                 @controllers.StreamsController.index()
 GET         /streams/new                                                             @controllers.StreamsController.newStream()
 POST        /streams/new                                                             @controllers.StreamsController.create()
-GET         /streams/:stream_id/messages                                             @controllers.StreamSearchController.index(stream_id: String, q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", interval ?= "", page:Integer ?= 1, saved:String ?= "", sortField:String ?= "", sortOrder:String ?= "", fields: String ?= "")
+GET         /streams/:stream_id/messages                                             @controllers.StreamSearchController.index(stream_id: String, q ?= "", rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", interval ?= "", page:Integer ?= 1, saved:String ?= "", sortField:String ?= "", sortOrder:String ?= "", fields: String ?= "", width:Integer ?= -1)
 POST        /streams/:stream_id/delete                                               @controllers.StreamsController.delete(stream_id: String)
 POST        /streams/:stream_id/rules/:streamrule_id/delete                          @controllers.StreamRulesController.delete(stream_id: String, streamrule_id: String)
 GET         /streams/:stream_id/rules                                                @controllers.StreamRulesController.index(stream_id: String)
@@ -42,10 +42,17 @@ GET         /streams/:stream_id/clone                                           
 POST        /streams/:stream_id/clone                                                @controllers.StreamsController.cloneStream(stream_id: String)
 GET         /streams/:stream_id/csv                                                  @controllers.StreamSearchController.exportAsCsv(q ?= "", stream_id: String, rangetype ?= "", relative:Integer ?= -1, from ?= "", to ?= "", keyword ?= "", fields:String ?="")
 
+# Stream Outputs
+GET         /streams/:stream_id/outputs                                              @controllers.StreamOutputsController.index(stream_id: String)
+POST        /streams/:stream_id/outputs/add                                          @controllers.StreamOutputsController.add(stream_id: String)
+POST        /streams/:stream_id/outputs/:output_id/delete                            @controllers.StreamOutputsController.remove(stream_id: String, output_id: String)
+POST        /streams/:stream_id/outputs                                              @controllers.StreamOutputsController.create(stream_id: String)
+
 # Alerts
 GET         /streams/:stream_id/alerts                                               @controllers.AlertsController.index(stream_id: String)
 POST        /streams/:stream_id/alerts/conditions/add/messagecount                   @controllers.AlertsController.addTypeMessageCount(stream_id: String)
 POST        /streams/:stream_id/alerts/conditions/add/fieldvalue                     @controllers.AlertsController.addTypeFieldValue(stream_id: String)
+POST        /streams/:stream_id/alerts/conditions/:condition_id                      @controllers.AlertsController.updateCondition(stream_id: String, condition_id: String)
 POST        /streams/:stream_id/alerts/conditions/:condition_id/delete               @controllers.AlertsController.removeCondition(stream_id: String, condition_id: String)
 POST        /streams/:stream_id/alerts/receivers/user/add                            @controllers.AlertsController.addReceiverUser(stream_id: String)
 POST        /streams/:stream_id/alerts/receivers/email/add                           @controllers.AlertsController.addReceiverEmail(stream_id: String)
@@ -75,6 +82,16 @@ POST        /system/inputs/:input_id/terminate                                  
 POST        /system/inputs/:node_id/:input_id/staticfields                           @controllers.InputsController.addStaticField(node_id: String, input_id: String)
 POST        /system/inputs/:input_id/staticfields                                    @controllers.InputsController.addStaticFieldGlobal(input_id: String)
 GET         /system/inputs/:node_id/:input_id/staticfields/:key/delete               @controllers.InputsController.removeStaticField(node_id: String, input_id: String, key: String)
+
+# Outputs
+GET         /system/outputs                                                          @controllers.OutputsController.index()
+POST        /system/outputs                                                          @controllers.OutputsController.create()
+POST        /system/outputs/:output_id/terminate                                     @controllers.OutputsController.terminate(output_id: String)
+
+POST        /system/inputs/:input_id/start                                           @controllers.InputsController.start(input_id: String)
+POST        /system/inputs/:input_id/stop                                            @controllers.InputsController.stop(input_id: String)
+POST        /system/inputs/:input_id/restart                                         @controllers.InputsController.restart(input_id: String)
+
 GET         /system/mappers                                                          @controllers.MappersController.index()
 GET         /system/metrics/node/:node_id                                            @controllers.MetricsController.ofNode(node_id: String, prefilter ?= "")
 GET         /system/metrics/master                                                   @controllers.MetricsController.ofMasterNode(prefilter ?= "")
@@ -94,18 +111,19 @@ GET         /system/nodes/:node_id/shutdown                                     
 
 # Saved searches
 GET         /savedsearches                                                           @controllers.api.SavedSearchesApiController.list()
-GET         /savedsearches/:search_id/execute                                        @controllers.SavedSearchesController.execute(search_id: String, streamId ?= "")
+GET         /savedsearches/:search_id/execute                                        @controllers.SavedSearchesController.execute(search_id: String, streamId ?= "", width:Integer ?= -1)
 POST        /savedsearches/create                                                    @controllers.api.SavedSearchesApiController.create()
 GET         /savedsearches/:search_id/delete                                         @controllers.SavedSearchesController.delete(search_id: String)
 
 # Extractors
 GET         /system/inputs/:node_id/:input_id/extractors                             @controllers.ExtractorsController.manage(node_id: String, input_id: String)
-GET         /system/inputs/:node_id/:input_id/extractors/new                         @controllers.ExtractorsController.newExtractor(node_id: String, input_id: String, extractor_type ?= "", field ?= "", example ?= "")
+GET         /system/inputs/:node_id/:input_id/extractors/new                         @controllers.ExtractorsController.newExtractor(node_id: String, input_id: String, extractor_type ?= "", field ?= "", example_index ?= "", example_id ?= "")
 POST        /system/inputs/:node_id/:input_id/extractors                             @controllers.ExtractorsController.create(node_id: String, input_id: String)
 POST        /system/inputs/:node_id/:input_id/extractors/:extractor_id/delete        @controllers.ExtractorsController.delete(node_id: String, input_id: String, extractor_id: String)
 GET         /system/inputs/:node_id/:input_id/extractors/export                      @controllers.ExtractorsController.exportExtractors(node_id: String, input_id: String)
 GET         /system/inputs/:node_id/:input_id/extractors/import                      @controllers.ExtractorsController.importExtractorsPage(node_id: String, input_id: String)
 POST        /system/inputs/:node_id/:input_id/extractors/import                      @controllers.ExtractorsController.importExtractors(node_id: String, input_id: String)
+
 
 # Users
 GET         /system/users                                                            @controllers.UsersController.index()
@@ -199,7 +217,8 @@ GET         /a/connection/available                                             
 GET         /a/dashboards                                                            @controllers.api.DashboardsApiController.index()
 GET         /a/dashboards/writable                                                   @controllers.api.DashboardsApiController.listWritable()
 POST        /a/dashboards/:id/positions                                              @controllers.api.DashboardsApiController.setWidgetPositions(id: String)
-GET         /a/dashboards/:dashboard_id/widgets/:widget_id/value                     @controllers.api.DashboardsApiController.widgetValue(dashboard_id: String, widget_id: String)
+GET         /a/dashboards/:dashboard_id/widgets/:widget_id/value                     @controllers.api.DashboardsApiController.widgetValue(dashboard_id: String, widget_id: String, resolution: Integer ?= -1)
+GET         /a/dashboards/:dashboard_id/widgets/:widget_id/resolution/:resolution/value                     @controllers.api.DashboardsApiController.widgetValue(dashboard_id: String, widget_id: String, resolution: Integer)
 POST        /a/dashboards/:dashboard_id/widgets                                      @controllers.api.DashboardsApiController.addWidget(dashboard_id: String)
 POST        /a/dashboards/:dashboard_id/widgets/:widget_id/delete                    @controllers.api.DashboardsApiController.removeWidget(dashboard_id: String, widget_id: String)
 POST        /a/dashboards/:dashboard_id/widgets/:widget_id/description               @controllers.api.DashboardsApiController.updateWidgetDescription(dashboard_id: String, widget_id: String)

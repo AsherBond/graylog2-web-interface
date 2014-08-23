@@ -2,6 +2,7 @@
 
 @import views.helpers.InputStateHelper
 @import views.helpers.Permissions._
+@import views.helpers.DateHelper
 @import lib.security.RestPermissions._
 @import controllers.routes
 @import org.graylog2.restclient.models._
@@ -14,10 +15,12 @@
             @if(input.getGlobal == false) {
                 <span class="text" title="@inputState.getNode.getNodeId">on @views.helpers.ClusterEntityHelper.linkToEntity(inputState.getNode)</span>
             }
-            <span class="text moment-from-now" title="@inputState.getStartedAt">@inputState.getStartedAt</span>
+            @DateHelper.readablePeriodFromNow(inputState.getStartedAt, "text")
                 &nbsp;
 
-            @if(isPermitted(PROCESSING_CHANGESTATE)) {
+            @views.html.system.inputs.partials.input_state_controls.render(inputState.getState, input)
+
+            @if(isPermitted(INPUTS_TERMINATE)) {
             <form action="@routes.InputsController.terminate(inputState.getNode.getNodeId, input.getId)" method="POST">
                 <button class="btn btn-danger btn-mini"
                 type="submit"
@@ -26,39 +29,11 @@
                 </button>
             </form>
             }
-            <div class="btn-group">
-                <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" href="#">
-                                        Action
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    @if(!inputState.getNode.isInstanceOf[Radio] && isPermitted(INPUTS_EDIT, input.getId)) {
-                        <li><a href="@routes.ExtractorsController.manage(inputState.getNode.getNodeId, input.getId)">Manage extractors</a></li>
-                    }
-
-
-                    <li><a href="@routes.MetricsController.ofNode(inputState.getNode.getNodeId, (input.getType + "." + input.getId))">Show metrics</a></li>
-
-                    @if(!inputState.getNode.isInstanceOf[Radio] && isPermitted(INPUTS_EDIT, input.getId)) {
-                        <li><a href="#" class="add-static-field" data-node-id="@inputState.getNode.getNodeId" data-input-id="@input.getId">Add static field</a></li>
-                    }
-
-                    @if(isPermitted(SEARCHES_RELATIVE)) {
-                        <li><a href="@routes.SearchController.index("gl2_source_input:" + input.getId, "relative", 28800)">Messages from this input</a></li>
-                    }
-                </ul>
-            </div>
+            @views.html.system.inputs.partials.input_action_menu.render(inputState.getNode, input)
         </span>
 
         <h3>
-            <i class="icon icon-ellipsis-vertical"></i>
-            @input.getTitle (@input.getName)
-
-            @if(inputTypes.get(input.getType).linkToDocs != null && !inputTypes.get(input.getType).linkToDocs.isEmpty) {
-                <a href="@inputTypes.get(input.getType).linkToDocs" target="_blank">
-                    <i class="icon icon-question-sign input-docs"></i>
-                </a>
-            }
+            @views.html.system.inputs.partials.input_list_title.render(input, inputTypes)
 
             <span class="label label-@InputStateHelper.labelClassForState(inputState.getState)">
                 @inputState.getState

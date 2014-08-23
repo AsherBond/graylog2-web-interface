@@ -56,7 +56,7 @@
                 <ul>
                 @for(widget <- dashboard.getWidgets.values()) {
                     <li data-row="@widget.getRow" data-col="@widget.getCol" data-sizex="@widget.getWidth" data-sizey="@widget.getHeight">
-                        <div class="widget" data-widget-type="@widget.getType.toString.toLowerCase" data-dashboard-id="@widget.getDashboard.getId" data-widget-id="@widget.getId">
+                        <div class="widget" data-cache-time="@widget.getCacheTime" data-widget-type="@widget.getType.toString.toLowerCase" data-dashboard-id="@widget.getDashboard.getId" data-widget-id="@widget.getId">
 
                             <div class="pull-left widget-top controls only-unlocked">
                                 <a href="#" class="remove-widget"><i class="icon icon-remove"></i></a>
@@ -200,7 +200,7 @@
                 <a class="btn" href="@routes.MetricsController.ofMasterNode("org.graylog2.dashboards.widgets.*." + widget.getId)">
                     Show widget metrics
                 </a>
-                <a class="btn btn-success" href="@DashboardWidgetRouteHelper.replayRoute(widget)">
+                <a class="btn btn-success added-width-search-link" href="@DashboardWidgetRouteHelper.replayRoute(widget)">
                     Replay search
                 </a>
                 <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>

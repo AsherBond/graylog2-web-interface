@@ -33,6 +33,7 @@ import org.graylog2.restclient.lib.timeranges.InvalidRangeParametersException;
 import org.graylog2.restclient.lib.timeranges.TimeRange;
 import org.graylog2.restclient.models.User;
 import org.graylog2.restclient.models.api.requests.dashboards.UserSetWidgetPositionsRequest;
+import org.graylog2.restclient.models.api.responses.dashboards.DashboardWidgetValueResponse;
 import org.graylog2.restclient.models.dashboards.Dashboard;
 import org.graylog2.restclient.models.dashboards.DashboardService;
 import org.graylog2.restclient.models.NodeService;
@@ -42,9 +43,7 @@ import play.mvc.Result;
 import views.helpers.Permissions;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Lennart Koopmann <lennart@torch.sh>
@@ -131,15 +130,18 @@ public class DashboardsApiController extends AuthenticatedController {
         return ok();
     }
 
-    public Result widgetValue(String dashboardId, String widgetId) {
+    public Result widgetValue(String dashboardId, String widgetId, int resolution) {
         try {
             Dashboard dashboard = dashboardService.get(dashboardId);
             DashboardWidget widget = dashboard.getWidget(widgetId);
+            DashboardWidgetValueResponse widgetValue = widget.getValue(api());
 
+            Object resultValue = (widget instanceof SearchResultChartWidget) ? filterValuesByResolution(resolution, widgetValue.result) : widgetValue.result;
             Map<String, Object> result = Maps.newHashMap();
-            result.put("result", widget.getValue(api()).result);
-            result.put("took_ms", widget.getValue(api()).tookMs);
-            result.put("calculated_at", widget.getValue(api()).calculatedAt);
+            result.put("result", resultValue);
+            result.put("took_ms", widgetValue.tookMs);
+            result.put("calculated_at", widgetValue.calculatedAt);
+            result.put("time_range", widgetValue.computationTimeRange);
 
             return ok(new Gson().toJson(result)).as("application/json");
         } catch (APIException e) {
@@ -148,6 +150,32 @@ public class DashboardsApiController extends AuthenticatedController {
         } catch (IOException e) {
             return status(504, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
         }
+    }
+
+    // in case the widget submitted its resolution, make sure we do not deliver more result values than the widget can display for performance reasons
+    private Object filterValuesByResolution(final int resolution, final Object resultValue) {
+        if (resultValue instanceof Map && resolution != -1) {
+            final Map<?, ?> resultMap = (Map) resultValue;
+            final int size = resultMap.size();
+            if (size > resolution) {
+                // using the absolute value guarantees, that there will always be enough values for the given resolution
+                final int factor = size / resolution;
+                // shortcut, no need to copy verbatim
+                if (factor != 1) {
+                    final Map<Object, Object> filteredResults = new LinkedHashMap<>(resolution);
+                    int index = 0;
+                    for (Map.Entry entry : resultMap.entrySet()) {
+                        // TODO: instead of sampling we might consider interpolation (compare SearchController)
+                        if (index % factor == 0) {
+                            filteredResults.put(entry.getKey(), entry.getValue());
+                        }
+                        index++;
+                    }
+                    return filteredResults;
+                }
+            }
+        }
+        return resultValue;
     }
 
     public Result addWidget(String dashboardId) {

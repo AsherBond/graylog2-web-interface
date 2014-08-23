@@ -1,9 +1,11 @@
 @(currentUser: org.graylog2.restclient.models.User, breadcrumbs: lib.BreadcrumbList, node: org.graylog2.restclient.models.Node, installedPlugins: List[org.graylog2.restclient.models.Plugin])
-@import org.graylog2.restclient.models._
 @import views.helpers.StringHelper._
+@import views.helpers.DateHelper
 @import controllers.routes;
 @import views.helpers.Permissions.isPermitted
 @import lib.security.RestPermissions._
+@import org.joda.time.DateTime
+@import org.joda.time.DateTimeZone
 
 @main("Node " + node.getNodeId, views.html.system.sidebar(), "", currentUser) {
 
@@ -38,6 +40,7 @@
         <div class="alert alert-info">
             <i class="icon icon-retweet"></i> &nbsp; Lifecycle state:
             <strong>@node.getLifecycle</strong>
+            <span class="pull-right">@partials.support.head_bubble("graylog2-server/load-balancer-status", 0, 19)</span>
         </div>
     </div>
 
@@ -46,12 +49,14 @@
         <div class="row-fluid">
             <div class="alert alert-success">
                 <i class="icon icon-heart"></i> &nbsp; Marked as <strong>ALIVE</strong> for load balancers.
+                <span class="pull-right">@partials.support.head_bubble("graylog2-server/load-balancer-status", 0, 19)</span>
             </div>
         </div>
     } else {
         <div class="row-fluid">
             <div class="alert alert-error">
                 <i class="icon icon-heart"></i> &nbsp; Marked as <strong>DEAD</strong> for load balancers.
+                <span class="pull-right">@partials.support.head_bubble("graylog2-server/load-balancer-status", 0, 19)</span>
             </div>
         </div>
     }
@@ -152,6 +157,9 @@
 
                 <dt>JVM:</dt>
                 <dd>PID @node.getPid, @node.getJVMDescription</dd>
+
+                <dt>Time:</dt>
+                <dd>@DateHelper.timestampShortTZ(DateTime.now(DateTimeZone.forID(node.getTimezone())), false)</dd>
             </dl>
         </div>
 
@@ -163,10 +171,10 @@
                 <dd>@node.getTransportAddressUri</dd>
 
                 <dt>Last reported:</dt>
-                <dd><span class="moment-from-now" title="@node.getLastSeen">@node.getLastSeen</span></dd>
+                <dd>@DateHelper.readablePeriodFromNow(node.getLastSeen)</dd>
 
                 <dt>Last contact:</dt>
-                <dd><span class="moment-from-now" title="@node.getLastContact">@node.getLastContact</span></dd>
+                <dd>@DateHelper.readablePeriodFromNow(node.getLastContact)</dd>
 
                 <dt>Failures:</dt>
                 <dd>@node.getFailureCount</dd>

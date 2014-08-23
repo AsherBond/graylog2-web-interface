@@ -152,12 +152,26 @@ public class InputsController extends AuthenticatedController {
         if (!Permissions.isPermitted(RestPermissions.INPUTS_READ)) {
             return redirect(routes.StartpageController.redirect());
         }
+
+        final Map<Input, Map<ClusterEntity, InputState>> globalInputs = Maps.newHashMap();
+        final List<InputState> localInputs = Lists.newArrayList();
+
         try {
             Radio radio = nodeService.loadRadio(radioId);
 
             if (radio == null) {
                 String message = "Did not find radio.";
                 return status(404, views.html.errors.error.render(message, new RuntimeException(), request()));
+            }
+
+            for (InputState inputState : inputService.loadAllInputStates(radio)) {
+                if (!inputState.getInput().getGlobal())
+                    localInputs.add(inputState);
+                else {
+                    Map<ClusterEntity, InputState> clusterEntityInputStateMap = Maps.newHashMap();
+                    clusterEntityInputStateMap.put(radio, inputState);
+                    globalInputs.put(inputState.getInput(), clusterEntityInputStateMap);
+                }
             }
 
             BreadcrumbList bc = new BreadcrumbList();
@@ -170,7 +184,10 @@ public class InputsController extends AuthenticatedController {
                     currentUser(),
                     bc,
                     radio,
-                    radio.getAllInputTypeInformation()
+                    globalInputs,
+                    localInputs,
+                    radio.getAllInputTypeInformation(),
+                    nodeService.loadMasterNode()
             ));
         } catch (IOException e) {
             return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
@@ -316,7 +333,7 @@ public class InputsController extends AuthenticatedController {
 
         try {
             if (!nodeService.loadNode(nodeId).terminateInput(inputId)) {
-                flash("Could not terminate input " + inputId);
+                flash("error", "Could not terminate input " + inputId);
             }
         } catch (NodeService.NodeNotFoundException e) {
             return status(404, views.html.errors.error.render(ApiClient.ERROR_MSG_NODE_NOT_FOUND, e, request()));
@@ -331,7 +348,7 @@ public class InputsController extends AuthenticatedController {
         }
         try {
             if (!nodeService.loadRadio(radioId).terminateInput(inputId)) {
-                flash("Could not terminate input " + inputId);
+                flash("error", "Could not terminate input " + inputId);
             }
         } catch (NodeService.NodeNotFoundException e) {
             return status(404, views.html.errors.error.render(ApiClient.ERROR_MSG_NODE_NOT_FOUND, e, request()));
@@ -346,23 +363,72 @@ public class InputsController extends AuthenticatedController {
         }
         Map<ClusterEntity, Boolean> results = inputService.terminateGlobal(inputId);
 
-        System.out.println("results: " + results);
-
         if (results.values().contains(false)) {
-            System.out.println("At least one node failed.");
             List<ClusterEntity> failingNodes = Lists.newArrayList();
 
             for (Map.Entry<ClusterEntity, Boolean> entry : results.entrySet())
                 if (!entry.getValue())
                     failingNodes.add(entry.getKey());
 
-            System.out.println("These nodes faield: " + failingNodes);
-
-            flash("Could not terminate input on nodes " + Joiner.on(", ").join(failingNodes));
+            flash("error", "Could not terminate input on nodes " + Joiner.on(", ").join(failingNodes));
         }
 
         return redirect(routes.InputsController.index());
 
+    }
+
+    public Result stop(String inputId) {
+        if (!Permissions.isPermitted(RestPermissions.INPUTS_STOP)) {
+            flash("error", "You are not permitted to stop this input.");
+            return redirect(routes.InputsController.index());
+        }
+
+        try {
+            inputService.stop(inputId);
+        } catch (IOException e) {
+            return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not fetch system information. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+
+        return redirect(routes.InputsController.index());
+    }
+
+    public Result start(String inputId) {
+        if (!Permissions.isPermitted(RestPermissions.INPUTS_START)) {
+            flash("error", "You are not permitted to stop this input.");
+            return redirect(routes.InputsController.index());
+        }
+
+        try {
+            inputService.start(inputId);
+        } catch (IOException e) {
+            return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not fetch system information. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+
+        return redirect(routes.InputsController.index());
+    }
+
+    public Result restart(String inputId) {
+        if (!Permissions.isPermitted(RestPermissions.INPUTS_START) && !Permissions.isPermitted(RestPermissions.INPUTS_STOP)) {
+            flash("error", "You are not permitted to stop this input.");
+            return redirect(routes.InputsController.index());
+        }
+
+        try {
+            inputService.restart(inputId);
+        } catch (IOException e) {
+            return status(500, views.html.errors.error.render(ApiClient.ERROR_MSG_IO, e, request()));
+        } catch (APIException e) {
+            String message = "Could not fetch system information. We expected HTTP 200, but got a HTTP " + e.getHttpCode() + ".";
+            return status(500, views.html.errors.error.render(message, e, request()));
+        }
+
+        return redirect(routes.InputsController.index());
     }
 
     public Result addStaticField(String nodeId, String inputId) {
@@ -425,5 +491,4 @@ public class InputsController extends AuthenticatedController {
             return status(404, views.html.errors.error.render(ApiClient.ERROR_MSG_NODE_NOT_FOUND, e, request()));
         }
     }
-
 }

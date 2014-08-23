@@ -21,67 +21,119 @@ $(document).ready(function() {
             .tooltip('show');
     });
 
+    Mousetrap.bind('>', function() {
+        if ($(".messages").size() == 0) {
+            return;
+        }
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            // internet explorer
+            e.returnValue = false;
+        }
+
+        var row = $(".messages tbody > tr.message-highlighted");
+        var nextRow;
+        if (row != undefined && row.size() > 0) {
+            nextRow = row.closest('tr').next();
+        } else {
+            nextRow = $(".messages tbody tr").first();
+        }
+
+
+        $('html,body').animate({ scrollTop: nextRow.offset().top - ( $(window).height() - nextRow.outerHeight(true) ) / 2  }, 200);
+
+        messageId = nextRow.attr("data-message-id");
+        index = nextRow.attr("data-source-index");
+        displayMessageInSidebar(nextRow, messageId, index);
+    });
+
+    Mousetrap.bind('<', function() {
+        if ($(".messages").size() == 0) {
+            return;
+        }
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            // internet explorer
+            e.returnValue = false;
+        }
+
+        var row = $(".messages tbody > tr.message-highlighted");
+        var prevRow = row.closest('tr').prev();
+
+        $('html,body').animate({ scrollTop: prevRow.offset().top - ( $(window).height() - prevRow.outerHeight(true) ) / 2  }, 200);
+
+        messageId = prevRow.attr("data-message-id");
+        index = prevRow.attr("data-source-index");
+        displayMessageInSidebar(prevRow, messageId, index);
+    });
+
+    function displayMessageInSidebar(row, messageId, index) {
+        // Highlight message.
+        $(".messages tbody > tr").removeClass("message-highlighted");
+        $(row).addClass("message-highlighted");
+
+        // Hide original sidebar and show ours again if it was already hidden before.
+        $("#sidebar-original").hide();
+        $("#sidebar-replacement").show();
+
+        // Show loading spinner. Will be replaced onSuccess.
+        spinner = "<h2><i class='icon-refresh icon-spin'></i> &nbsp;Loading message</h2>";
+        $("#sidebar-replacement").html(spinner);
+
+        $.get(appPrefixed("/messages/" + index + "/" + messageId + "/partial"), function(data) {
+            $("#sidebar-replacement").html(data);
+        })
+
+            .fail(function() { displayFailureInSidebar("Sorry, could not load message."); })
+
+            .complete(function() {
+
+                sizeSidebar();
+
+                // Inject terms of a message when modal is requested.
+                $('.terms-msg-modal').on('show', function() {
+                    messageId = $(this).attr("data-msg-id");
+                    spinner = $("#terms-msg-" + messageId + " .modal-body .spinner");
+                    list = $("#terms-msg-" + messageId + " .modal-body ul");
+                    list_link = $("#terms-msg-" + messageId + "-as-list");
+
+                    if ($(this).attr("data-loaded") != "true") {
+                        $.get(appPrefixed("/a/analyze/" + index + "/" + messageId + "/message"), function(data) {
+                            if (data.length > 0) {
+                                for(var i = 0; i < data.length; i++) {
+                                    list.append("<li>" + data[i] + "</li>");
+                                }
+                            } else {
+                                list.append("<li>No terms extracted</li>")
+                            }
+
+                            // Hide spinner, show list link.
+                            spinner.hide();
+                            list_link.show();
+                        });
+
+                        // Mark as already loaded so we don't add the terms again on next open.
+                        $(this).attr("data-loaded", "true");
+                    }
+
+                    // Show as list link.
+                    list_link.bind("click", function() {
+                        list.addClass("as-list");
+                        $(this).hide();
+                        return false;
+                    });
+                });
+            })
+    }
+
     // Opening messages in sidebar with click in message result table.
 	$(".messages tbody > tr").bind("click", function() {
 		messageId = $(this).attr("data-message-id");
 		index = $(this).attr("data-source-index");
 
-		// Highlight message.
-		$(".messages tbody > tr").removeClass("message-highlighted");
-		$(this).addClass("message-highlighted");
-
-		// Hide original sidebar and show ours again if it was already hidden before.
-		$("#sidebar-original").hide();
-		$("#sidebar-replacement").show();
-
-		// Show loading spinner. Will be replaced onSuccess.
-		spinner = "<h2><i class='icon-refresh icon-spin'></i> &nbsp;Loading message</h2>";
-		$("#sidebar-replacement").html(spinner);
-
-		$.get(appPrefixed("/messages/" + index + "/" + messageId + "/partial"), function(data) {
-			$("#sidebar-replacement").html(data);
-		})
-
-		.fail(function() { displayFailureInSidebar("Sorry, could not load message."); })
-
-		.complete(function() {
-
-            sizeSidebar();
-
-			// Inject terms of a message when modal is requested.
-			$('.terms-msg-modal').on('show', function() {
-                messageId = $(this).attr("data-msg-id");
-                spinner = $("#terms-msg-" + messageId + " .modal-body .spinner");
-                list = $("#terms-msg-" + messageId + " .modal-body ul");
-                list_link = $("#terms-msg-" + messageId + "-as-list");
-
-                if ($(this).attr("data-loaded") != "true") {
-                    $.get(appPrefixed("/a/analyze/" + index + "/" + messageId + "/message"), function(data) {
-                        if (data.length > 0) {
-                            for(var i = 0; i < data.length; i++) {
-                                list.append("<li>" + data[i] + "</li>");
-                            }
-                        } else {
-                            list.append("<li>No terms extracted</li>")
-                        }
-
-                        // Hide spinner, show list link.
-                        spinner.hide();
-                        list_link.show();
-                    });
-
-                    // Mark as already loaded so we don't add the terms again on next open.
-                    $(this).attr("data-loaded", "true");
-                }
-
-				// Show as list link.
-				list_link.bind("click", function() {
-					list.addClass("as-list");
-					$(this).hide();
-                    return false;
-				});
-			});
-		})
+        displayMessageInSidebar(this, messageId, index);
 	});
 
 	// Go back in sidebar history / Show original sidebar.
@@ -99,6 +151,10 @@ $(document).ready(function() {
     // Hide sidebar completely.
     $(".sidebar-hide").live("click", function() {
         hideSidebar();
+    });
+
+    $(".sidebar-show").live("click", function() {
+        showSidebar();
     });
 
     // Always do this on first load.
@@ -139,6 +195,7 @@ $(document).ready(function() {
             }
         }
     })();
+
     // turn on all pre-selected fields
     $(".field-selector[checked]").each(function() {
         searchViewState.addField($(this).data("field-name"));
@@ -408,6 +465,22 @@ $(document).ready(function() {
             });
         }, 150 );
     }
+
+    var passwordField = $("form #password");
+    if (passwordField.length) {
+        var passwordDomElement = passwordField[0];
+        delayedAjaxCallOnKeyup(passwordDomElement, function() {
+            var password = passwordField.val();
+            if (password.length < 6) {
+                passwordDomElement.setCustomValidity("Password is too short!");
+                validationFailure(passwordField, "Password is too short!");
+            } else {
+                passwordDomElement.setCustomValidity('');
+                passwordField.popover("destroy");
+            }
+        }, 150);
+    }
+
     var repeatPasswordField = $("form #password-repeat");
     if (repeatPasswordField.length) {
         var domElement1 = repeatPasswordField[0];
@@ -418,7 +491,7 @@ $(document).ready(function() {
                 repeatPasswordField.popover("destroy");
             } else {
                 domElement1.setCustomValidity("Passwords do not match!");
-                validationFailure( repeatPasswordField, "Passwords do not match!");
+                validationFailure(repeatPasswordField, "Passwords do not match!");
             }
         }, 150);
     }
@@ -804,9 +877,7 @@ $(document).ready(function() {
     })();
 
     function onResizedWindow(){
-        if(typeof drawResultGraph != "undefined") {
-            drawResultGraph();
-        }
+        redrawResultGraph();
 
         for (var field in fieldGraphs) {
             fieldGraphs[field].configure({ width: $("#main-content").width()-12 });
@@ -884,22 +955,17 @@ $(document).ready(function() {
     $('input, textarea').placeholder();
 
     $(".node-state").tooltip();
-});
 
-function searchDateTimeFormatted(date) {
-    var day = ('0' + date.getDate()).slice(-2); // wtf javascript. this returns the day.
-    var month = ('0' + (date.getMonth() + 1)).slice(-2);
-    var year = date.getFullYear();
-
-    var hour = ('0' + date.getHours()).slice(-2);
-    var minute = ('0' + date.getMinutes()).slice(-2);
-    var second = ('0' + date.getSeconds()).slice(-2);
-    var millis = "";
-    if (date.getMilliseconds() > 0) {
-        millis = '.' + ('0' + date.getMilliseconds()).slice(-3);
+    datetimeFields = $(".browser-datetime")
+    if(datetimeFields.length > 0) {
+        datetimeFields.each(function() {
+            var currentDatetime = moment();
+            $(this).attr("title", currentDatetime.format(momentHelper.DATE_FORMAT_ISO));
+            $(this).attr("datetime", currentDatetime.format(momentHelper.DATE_FORMAT_ISO));
+            $(this).text(currentDatetime.format(momentHelper.DATE_FORMAT_TZ));
+        });
     }
-    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second + millis;
-}
+});
 
 function showError(message) {
     toastr.error(message, "Error", {
@@ -968,16 +1034,29 @@ function delayedAjaxCallOnKeyup(el, callback, delay) {
 
 function hideSidebar() {
     $("#sidebar").hide();
-    $("#main-content").removeClass("span8");
-    $("#main-content").addClass("span12");
+    $("#sidebar-activator").show();
+    var mainContentElement = $("#main-content");
+    mainContentElement.removeClass("span8");
+    mainContentElement.addClass("span12");
+    redrawResultGraph();
+}
 
-    // Rebuild search result graph. (only doing something is there is one)
-    if(typeof drawResultGraph != "undefined") {
-        drawResultGraph();
+function showSidebar() {
+    $("#sidebar-activator").hide();
+    $("#sidebar").show();
+    var mainContentElement = $("#main-content");
+    mainContentElement.removeClass("span12");
+    mainContentElement.addClass("span8");
+    redrawResultGraph();
+}
+
+function redrawResultGraph() {
+    if (typeof resultHistogram != "undefined") {
+        resultHistogram.redrawResultGraph();
     }
 }
 
-function originalUniversalSearchSettings() {
+function originalUniversalSearchSettings(searchViewState) {
     var result = {};
 
     result.query =  $("#universalsearch-query-permanent").text().trim();
@@ -994,6 +1073,10 @@ function originalUniversalSearchSettings() {
         case "keyword":
             result.keyword = $("#universalsearch-keyword-permanent").text().trim();
             break;
+    }
+
+    if (searchViewState) {
+        result.fields = searchViewState.getFieldsString();
     }
 
     return result;
@@ -1045,19 +1128,6 @@ function generateId() {
     };
 })(jQuery);
 
-// Browsers fail with all kinds of date formats. Passing every part of the date as a constructor parameter seems to be the safest way to go.
-function parseDateFromString(src) {
-    var parts = /(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/.exec(src);
-
-    var millis = 0;
-    if (parts[7] != "" && parts[7] != undefined) {
-        millis = parts[7];
-    }
-
-    // LOL SRSLY WTF JAVASCRIPT: -1
-    return new Date(parts[1], parts[2]-1, parts[3], parts[4], parts[5], parts[6], millis);
-}
-
 clipBoardClient = {};
 
 // This is holding all field graphs.
@@ -1089,8 +1159,26 @@ searchViewState = {
     getFields: function() {
         return Object.keys(this.fields);
     },
+    getOrderedFields: function() {
+        // order the fields as shown on the messages table
+        var fields = this.getFields().sort(function(a, b){
+            var tableHeaders = $("table.messages th[id^=result-th]:visible");
+            for (i=0; i < tableHeaders.length; i++) {
+                var content = $(tableHeaders[i]).text();
+                var cleanContent = content.trim().toLowerCase();
+                if (cleanContent == a) {
+                    return -1;
+                }
+                if (cleanContent == b) {
+                    return 1;
+                }
+            }
+            return 0;
+        });
+        return fields;
+    },
     getFieldsString: function() {
-        return this.getFields().sort().join(",");
+        return this.getOrderedFields().join(",");
     },
     updateFragment: function() {
         var uri = new URI();

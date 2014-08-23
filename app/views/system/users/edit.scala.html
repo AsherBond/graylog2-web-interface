@@ -20,7 +20,7 @@
     @views.html.partials.breadcrumbs(breadcrumbs)
 
     <div class="row-fluid">
-        <h1><i class="icon icon-edit"></i> Edit user &raquo;@username&laquo;</h1>
+        <h1 class="username"><i class="icon icon-edit"></i> Edit user &raquo;@username&laquo;</h1>
         You can either change the details of a user here or set a new password.
     </div>
 
@@ -30,14 +30,14 @@
                 <div class="control-group">
                     <label class="control-label" for="fullname">Full Name</label>
                     <div class="controls">
-                        <input name="fullname" id="fullname" type="text" value="@form("fullname").value()" required/>
+                        <input name="fullname" id="fullname" type="text" value="@form("fullname").value()" required maxlength="200"/>
                         <span class="help-inline">A descriptive name for this account.</span>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label" for="email">Email Address</label>
                     <div class="controls">
-                        <input name="email" id="email" type="email" value="@form("email").value()" required />
+                        <input name="email" id="email" type="email" value="@form("email").value()" required maxlength="254"/>
                     </div>
                 </div>
                 @if(!isPermitted(user, "*")) {

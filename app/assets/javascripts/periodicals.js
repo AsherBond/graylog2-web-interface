@@ -145,6 +145,7 @@ $(document).ready(function() {
                         $(".heap-max", thisHeap).text(data.max);
 
                         $(".input-master-cache", thisHeap).text(data.input_master_cache);
+                        $(".output-master-cache", thisHeap).text(data.output_master_cache);
                     },
                     complete: function() {
                         // Trigger next call of the whole function when we updated the last element.
@@ -365,33 +366,35 @@ $(document).ready(function() {
             url: appPrefixed('/a/system/notifications'),
             headers: { "X-Graylog2-No-Session-Extension" : "true"},
             success: function(data) {
+                var notificationBadgeElement = $("#notification-badge");
                 var count = data.length;
                 if (count > 0) {
-                    $("#notification-badge").text(count);
+                    notificationBadgeElement.text(count);
                     var urgent = data.filter(function(x) { return x.severity == "URGENT"});
                     if (urgent.length > 0) {
-                        if (!$("#notification-badge").data("bouncing")) {
+                        if (!notificationBadgeElement.data("bouncing")) {
                             var bouncer = setInterval(function() {
-                                if ($("#notification-badge").data("bouncing"))
-                                    $("#notification-badge").effect("fade", "fast")
-                            }, 250);
+                                if (notificationBadgeElement.data("bouncing")) {
+                                    notificationBadgeElement.effect("fade", "fast");
+                                }
+                            }, 750);
 
                             $("#notification-badge").data("bouncing", bouncer);
                         }
                     } else {
-                        if ($("#notification-badge").data("bouncing")) {
-                            clearInterval($("#notification-badge").data("bouncing"));
-                            $("#notification-badge").data("bouncing", undefined);
+                        if (notificationBadgeElement.data("bouncing")) {
+                            clearInterval(notificationBadgeElement.data("bouncing"));
+                            notificationBadgeElement.data("bouncing", undefined);
                         }
                     }
-                    $("#notification-badge").show();
+                    notificationBadgeElement.show();
                 } else {
                     // Badges are collapsing when empty so we make a 0 collapse.
-                    $("#notification-badge").text("");
-                    $("#notification-badge").hide();
-                    if ($("#notification-badge").data("bouncing")) {
-                        clearInterval($("#notification-badge").data("bouncing"));
-                        $("#notification-badge").data("bouncing", undefined);
+                    notificationBadgeElement.text("");
+                    notificationBadgeElement.hide();
+                    if (notificationBadgeElement.data("bouncing")) {
+                        clearInterval(notificationBadgeElement.data("bouncing"));
+                        notificationBadgeElement.data("bouncing", undefined);
                     }
                 }
             },

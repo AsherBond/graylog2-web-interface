@@ -1,7 +1,9 @@
 @(alertConditions: List[org.graylog2.restclient.models.alerts.AlertCondition],
         stream: org.graylog2.restclient.models.Stream)
+@import views.helpers.AlertConditionDecorator
 @import lib.security.RestPermissions._
 @import views.helpers.Permissions._
+@import views.helpers.DateHelper
 
 @if(alertConditions.isEmpty) {
     <div style="margin-top: 10px;" class="alert alert-info">
@@ -11,14 +13,16 @@
     @for(condition <- alertConditions) {
         <div class="row-fluid node-row alert-condition" data-condition-id="@condition.getId">
             <span class="pull-right node-row-info">
-                    Created by @views.html.partials.links.to_user.render(condition.getCreatorUser)
-                <span class="moment-from-now" title="@condition.getCreatedAt()">@condition.getCreatedAt()</span>
+                Created by @views.html.partials.links.to_user.render(condition.getCreatorUser)
+                @DateHelper.readablePeriodFromNow(condition.getCreatedAt())
 
                 @if(isPermitted(STREAMS_EDIT, stream.getId)) {
                         &nbsp;
-                    <form action="@routes.AlertsController.removeCondition(stream.getId, condition.getId)" method="POST" style="position: relative; top: -1px;">
+                    <form action="@routes.AlertsController.removeCondition(stream.getId, condition.getId)" method="POST">
                         <button type="submit" class="btn btn-danger btn-mini" data-confirm="Really delete alarm condition?">Delete</button>
                     </form>
+
+                    <a href="#" class="btn btn-mini edit-alert-condition">Edit</a>
                 }
                 </span>
 
@@ -34,6 +38,10 @@
             <div class="alert-condition">
             @condition.getDescription
             </div>
+
+            @if(isPermitted(STREAMS_EDIT, stream.getId)) {
+                @AlertConditionDecorator.loadTemplate(stream, condition)
+            }
         </div>
     }
 }

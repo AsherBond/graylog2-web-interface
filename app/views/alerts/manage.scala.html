@@ -4,10 +4,9 @@
         alerts: List[org.graylog2.restclient.models.alerts.Alert],
         users: String,
         availableAlarmCallbacks: Map[String, org.graylog2.restclient.models.api.responses.alarmcallbacks.GetSingleAvailableAlarmCallbackResponse],
-        alarmCallbacks: List[org.graylog2.restclient.models.AlarmCallback])
+        alarmCallbacks: List[org.graylog2.restclient.models.AlarmCallback],
+        node: org.graylog2.restclient.models.Node)
 
-@import org.graylog2.restclient.models.alerts._
-@import org.graylog2.restclient.models.api.responses.alarmcallbacks.GetSingleAvailableAlarmCallbackResponse
 @import lib.security.RestPermissions._
 @import views.helpers.Permissions._
 
@@ -29,9 +28,8 @@
 
         <button class="btn btn-success add-alert">Configure new alert condition</button>
 
-        @views.html.partials.alerts.form_message_count.render(stream)
-
-        @views.html.partials.alerts.form_field_value.render(stream)
+        @views.helpers.MessageCountAlertConditionDecorator.loadTemplate(stream, null)
+        @views.helpers.FieldValueAlertConditionDecorator.loadTemplate(stream, null)
     }
 
     <hr />
@@ -43,14 +41,15 @@
 
     <hr />
 
-    <h2><i class="icon icon-bitbucket"></i> Alert destinations</h2>
+    <h2><i class="icon icon-mail-forward"></i> Alert callbacks</h2>
 
     <div class="row-fluid" style="margin-bottom: 5px;">
-        The following actions will be taken when an alert is triggered for this stream.
+        The following callbacks will be performed when this stream triggers an alert.
     </div>
 
     @if(isPermitted(STREAMS_EDIT, stream.getId)) {
         <select class="add-alert-destination-type">
+            <option disabled selected>New callback type</option>
             @for((callbackType, details) <- availableAlarmCallbacks.toArray.sortBy(_._2.name)) {
                 <option value="@callbackType">@details.name</option>
             }
@@ -61,7 +60,9 @@
         @views.html.partials.alerts.list_forms_available_callbacks.render(availableAlarmCallbacks, stream)
     }
 
-    @views.html.partials.alerts.list_alarm_callbacks.render(alarmCallbacks, availableAlarmCallbacks, stream)
+    <div class="alert-callbacks">
+        @views.html.partials.alerts.list_alarm_callbacks.render(alarmCallbacks, availableAlarmCallbacks, stream)
+    </div>
 
     <hr />
 
@@ -150,5 +151,5 @@
 
     <hr />
 
-    @views.html.partials.alerts.list_triggered_alerts.render(alerts, totalAlerts, stream)
+    @views.html.partials.alerts.list_triggered_alerts.render(alerts, totalAlerts, stream, node)
 }

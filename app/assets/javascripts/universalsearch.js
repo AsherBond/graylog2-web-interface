@@ -10,14 +10,16 @@ $(document).ready(function() {
     $("#universalsearch .timerange-selector-container .absolute .date-select").datepicker({
         format: "yyyy-mm-dd"
     }).on("changeDate", function(ev) {
-        $(this).val($(this).val() + " 00:00:00");
+        var dateString = $(this).val() + " 00:00:00";
+        var date = momentHelper.parseUserLocalFromString(dateString);
+        $(this).val(date.format(momentHelper.DATE_FORMAT_TZ));
     });
 
     $("#universalsearch .timerange-selector-container .absolute .set-to-now").on("click", function() {
         var input = $("input", $(this).parent());
 
-        var date = new Date();
-        input.val(searchDateTimeFormatted(date));
+        var date = momentHelper.toUserTimeZone(null);
+        input.val(date.format(momentHelper.DATE_FORMAT_TZ));
     });
 
     // on submit create the iso8601 timestamps for absolute searches
@@ -25,7 +27,7 @@ $(document).ready(function() {
         $(".timerange-selector-container .absolute input[type='text']").each(function() {
             var dateString = $(this).val();
             if (dateString) {
-                var date = new Date(parseDateFromString(dateString));
+                var date = momentHelper.parseFromString(dateString);
 
                 $("input[type='hidden']", $(this).parent()).val(date.toISOString());
             }
@@ -37,13 +39,26 @@ $(document).ready(function() {
         $("#universalsearch-fields", $(this)).val(searchViewState.getFieldsString());
     });
 
+    $(".universalsearch-form").on("submit", function() {
+        var width = $(document).width();
+        $("input[name='width']", $(this)).val(width);
+    });
+
+    $(".added-width-search-link").on("click", function() {
+        var width = $(document).width();
+        var href = $(this).attr("href");
+        href = URI(href).addSearch("width", width).toString();
+        $(this).attr("href", href);
+    });
+
     // initialize the user readable dates on page load
     $("#universalsearch .timerange-selector-container .absolute input[type='hidden']").each(function() {
         var input = $("input[type='text']", $(this).parent());
         var dateString = $(this).val();
         if (dateString) {
-            var date = new Date(dateString);
-            input.val(searchDateTimeFormatted(date));
+            var date = momentHelper.parseFromString(dateString);
+            date = momentHelper.toUserTimeZone(date);
+            input.val(date.format(momentHelper.DATE_FORMAT_TZ));
         }
     });
 
@@ -86,38 +101,10 @@ $(document).ready(function() {
         $(".result-highlight").toggleClass("result-highlight-colored", $(this).is(":checked"));
     });
 
-    /* TODO figure out if we want to keep it this way */
-    String.prototype.gl2_splice = function( idx, s ) {
-        return (this.slice(0,idx) + s + this.slice(idx));
-    };
-    $(".messages tbody tr").each(function() {
-        var ranges = $(this).data('highlight');
-
-        if (ranges == undefined) {
-            // Search highlighting not enabled in server.
-            $(".explain-result-highlight-control").show();
-        } else {
-            // Search highlighting is enabled in server.
-            for (var field in ranges) {
-                if (! ranges.hasOwnProperty(field) ) {
-                    continue;
-                }
-                var positions = ranges[field];
-                var fieldNameHash = CryptoJS.MD5(field);
-                $(".result-td-" + fieldNameHash, $(this)).each(function(){
-                    var elemText = $(this).text();
-                    for (var idx = positions.length - 1; idx >= 0; idx--) {
-                        var range = positions[idx];
-                        elemText = elemText.gl2_splice(range.start + range.length, "</span>");
-                        elemText = elemText.gl2_splice(range.start, '<span class="result-highlight">');
-                    }
-                    $(this).html(elemText);
-                    $(".result-highlight", $(this)).toggleClass("result-highlight-colored");
-                });
-                $(".result-highlight-control").show();
-            }
-        }
-    });
+    if ($(".messages").find(".result-highlight").length > 0) {
+        $(".messages .result-highlight").toggleClass("result-highlight-colored");
+        $(".result-highlight-control").show();
+    }
 
     // Save a search: Open save dialog.
     $(".save-search").on("click", function(e) {
@@ -141,7 +128,7 @@ $(document).ready(function() {
         button.html("<i class='icon icon-spin icon-spinner'></i>&nbsp; Saving");
 
         var params = {};
-        params.query = originalUniversalSearchSettings();
+        params.query = originalUniversalSearchSettings(searchViewState);
         params.title = title
 
         $.ajax({
@@ -174,13 +161,14 @@ $(document).ready(function() {
 
     // Saved search selected. Get details and send to page that redirects to the actual search.
     $("#saved-searches-selector").on("change", function(e) {
+        var width = $(document).width();
         var searchId = $("#saved-searches-selector").val();
 
         var container = $(this).closest(".saved-searches-selector-container");
         if(!!container.attr("data-stream-id")) {
-            var url = "/savedsearches/" + encodeURI(searchId) + "/execute?" + "streamId=" + container.attr("data-stream-id");
+            var url = "/savedsearches/" + encodeURI(searchId) + "/execute?" + "streamId=" + container.attr("data-stream-id") + "&width=" + width;
         } else {
-            var url = "/savedsearches/" + encodeURI(searchId) + "/execute";
+            var url = "/savedsearches/" + encodeURI(searchId) + "/execute" + "?width=" + width;
         }
 
         window.location = appPrefixed(url);
